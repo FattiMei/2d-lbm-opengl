@@ -2,8 +2,7 @@
 #define __LBM_H__
 
 
-#include <stdio.h>
-#include <stdbool.h>
+#include <cstdio>
 
 
 extern int width,
@@ -57,9 +56,25 @@ void lbm_calc_boundary(
 
 
 void lbm_setup(FILE *in);
-void lbm_hotfix_variables(int *external_width, int *external_height, float **external_u_out, bool **external_obstacles);
 void lbm_step(int it);
 void lbm_dump_solution(FILE *out, int it);
+
+
+class Lbm {
+	public:
+		Lbm(FILE *in) {
+			lbm_setup(in);
+			it = 0;
+		}
+
+		void step() {
+			lbm_step(it);
+			++it;
+		}
+
+	private:
+		int it;
+};
 
 
 #endif

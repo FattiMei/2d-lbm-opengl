@@ -35,7 +35,7 @@ int main(int argc, char *argv[]) {
 	}
 
 
-	lbm_setup(in);
+	Lbm lbm(in);
 
 
 	int window_width = 800;
@@ -49,13 +49,11 @@ int main(int argc, char *argv[]) {
 	experiment_init(window_width, window_height);
 	window_set_callbacks();
 
-	int it = 0;
 	while (!window_should_close()) {
 		experiment_render();
 
-		for (int comp_step = 0; comp_step < 5; ++comp_step) {
-			lbm_step(it);
-			++it;
+		for (int i = 0; i < 5; ++i) {
+			lbm.step();
 		}
 
 		window_swap_buffers();
