@@ -1,38 +1,38 @@
 #include "lbm.h"
-#include <stdlib.h>
-#include <string.h>
-#include <math.h>
+#include <cstdlib>
+#include <cstring>
+#include <cmath>
 
 
- int width,
-	   height,
-	   max_it;
+int width,
+    height,
+    max_it;
 
 
- float reynolds,
-	     u_in;
+float reynolds,
+      u_in;
 
 
- float nu,
-	     tau,
-	     sigma,
-	     double_square_sigma,
-	     lambda_trt,
-	     tau_minus,
-	     omega_plus,
-	     omega_minus,
-	     sub_param,
-	     sum_param;
+float nu,
+      tau,
+      sigma,
+      double_square_sigma,
+      lambda_trt,
+      tau_minus,
+      omega_plus,
+      omega_minus,
+      sub_param,
+      sum_param;
 
 
- int *boundary;
- bool *obstacles;
- float *ux,
-	     *uy,
-	     *f,
-	     *new_f,
-	     *rho,
-	     *u_out;
+int *boundary;
+bool *obstacles;
+float *ux,
+      *uy,
+      *f,
+      *new_f,
+      *rho,
+      *u_out;
 
 
 // @TODO: add static attribute to internally used functions
@@ -64,6 +64,7 @@ void lbm_setup(FILE *in) {
 	boundary  = (int   *) malloc(4 * width * height * sizeof(int));
 
 
+	// this procedure could be astracted away
 	int x, y;
 	memset(obstacles, 0, width * height * sizeof(bool));
 	while (fscanf(in, "%d %d\n", &x, &y) == 2) {
@@ -408,4 +409,31 @@ void lbm_step(int it) {
 void lbm_dump_solution(FILE *out, int it) {
 	fprintf(out, "%d\n", it);
 	fwrite(u_out, sizeof(float), width * height, out);
+}
+
+
+Lbm::Lbm(FILE *in) {
+	lbm_setup(in);
+	it = 0;
+}
+
+
+void Lbm::step() {
+	lbm_step(it++);
+}
+
+
+void Lbm::write(FILE *out) {
+	if (first_write) {
+		first_write = false;
+
+		fprintf(out, "%d %d\n", width, height);
+	}
+
+	lbm_dump_solution(out, it);
+}
+
+
+int Lbm::get_frame_count() {
+	return it;
 }

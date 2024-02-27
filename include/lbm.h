@@ -62,18 +62,15 @@ void lbm_dump_solution(FILE *out, int it);
 
 class Lbm {
 	public:
-		Lbm(FILE *in) {
-			lbm_setup(in);
-			it = 0;
-		}
-
-		void step() {
-			lbm_step(it);
-			++it;
-		}
+		Lbm(int width_, int height_, float reynolds_, float inlet_, bool obstacles_[]);
+		Lbm(FILE *in);
+		void step();
+		void write(FILE *out);
+		int get_frame_count();
 
 	private:
 		int it;
+		bool first_write = true;
 };
 
 

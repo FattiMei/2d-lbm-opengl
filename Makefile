@@ -1,18 +1,13 @@
-CC       = gcc
+CC       = g++
 CCFLAGS  = -Wall
 OPTFLAGS = -O2 -fopenmp
 INCLUDE  = -I ./include
 LIBS     = -lm -lglfw -lEGL -lGL
 
-# @TODO: find the default installed version of python
-PYTHON   = python3.8
-
 
 sources  = $(wildcard src/*.c)
 examples = $(wildcard examples/*.c)
-
 objects  = $(patsubst src/%.c,build/%.o,$(sources))
-
 targets  += $(patsubst %.c,build/%,$(examples))
 targets  += $(objects)
 
