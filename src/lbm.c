@@ -406,12 +406,6 @@ void lbm_step(int it) {
 }
 
 
-void lbm_dump_solution(FILE *out, int it) {
-	fprintf(out, "%d\n", it);
-	fwrite(u_out, sizeof(float), width * height, out);
-}
-
-
 Lbm::Lbm(FILE *in) {
 	lbm_setup(in);
 	it = 0;
@@ -423,14 +417,15 @@ void Lbm::step() {
 }
 
 
-void Lbm::write(FILE *out) {
+void Lbm::write(std::ofstream &out) {
 	if (first_write) {
 		first_write = false;
 
-		fprintf(out, "%d %d\n", width, height);
+		out << width << ' ' << height << std::endl;
 	}
 
-	lbm_dump_solution(out, it);
+	out << it << std::endl;
+	out.write(reinterpret_cast<char *>(u_out), sizeof(float) * width * height);
 }
 
 

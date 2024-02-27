@@ -1,3 +1,5 @@
+#include <iostream>
+#include <fstream>
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -24,16 +26,11 @@ int main(int argc, char *argv[]) {
 
 
 	FILE *in  = fopen(input_filename,  "r");
-	FILE *out = fopen(output_filename, "w");
+	std::ofstream out(output_filename, std::ios::binary);
 
 
 	if (in == NULL) {
 		fprintf(stderr, "Could not open input file %s\n", input_filename);
-		return 1;
-	}
-
-	if (out == NULL) {
-		fprintf(stderr, "Could not open output file %s\n", output_filename);
 		return 1;
 	}
 
@@ -73,7 +70,6 @@ int main(int argc, char *argv[]) {
 	}
 
 	window_close();
-	fclose(out);
 
 	return 0;
 }

@@ -2,7 +2,7 @@
 #define __LBM_H__
 
 
-#include <cstdio>
+#include <fstream>
 
 
 extern int width,
@@ -57,7 +57,6 @@ void lbm_calc_boundary(
 
 void lbm_setup(FILE *in);
 void lbm_step(int it);
-void lbm_dump_solution(FILE *out, int it);
 
 
 class Lbm {
@@ -65,7 +64,7 @@ class Lbm {
 		Lbm(int width_, int height_, float reynolds_, float inlet_, bool obstacles_[]);
 		Lbm(FILE *in);
 		void step();
-		void write(FILE *out);
+		void write(std::ofstream &out);
 		int get_frame_count();
 
 	private:
