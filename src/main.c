@@ -7,6 +7,9 @@
 #include "experiment.h"
 
 
+#define MAX_FRAMES_SAVED 40
+
+
 int main(int argc, char *argv[]) {
 	if (argc != 3) {
 		fprintf(stderr, "Invalid command line arguments\n");
@@ -49,11 +52,20 @@ int main(int argc, char *argv[]) {
 	experiment_init(window_width, window_height);
 	window_set_callbacks();
 
+	int frames_saved = 0;
 	while (!window_should_close()) {
 		experiment_render();
 
-		for (int i = 0; i < 5; ++i) {
-			lbm.step();
+		lbm.step();
+
+		if (lbm.get_frame_count() % 100 == 0) {
+			if (frames_saved < MAX_FRAMES_SAVED) {
+				lbm.write(out);
+				++frames_saved;
+			}
+			else {
+				break;
+			}
 		}
 
 		window_swap_buffers();

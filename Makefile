@@ -31,6 +31,10 @@ run: serial
 	./serial data/input.txt output.bin
 
 
+test: serial output.bin
+	python3.8 compare.py reference.bin output.bin
+
+
 .PHONY folder:
 folder:
 	mkdir -p build
