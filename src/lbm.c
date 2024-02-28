@@ -101,23 +101,20 @@ void lbm_init(
 	};
 
 
-	for (int row = 0; row < height; ++row) {
-		for (int col = 0; col < width; ++col) {
-			const int index = col + row * width;
+	for (int index = 0; index < size; ++index) {
 
-			if (obstacles[index]) {
-				ux[index] = NAN;
-				uy[index] = NAN;
+		if (obstacles[index]) {
+			ux[index] = NAN;
+			uy[index] = NAN;
+		}
+		else {
+			for (int i = 0; i < 9; ++i) {
+				f[index + size * i] = weights[i];
 			}
-			else {
-				for (int i = 0; i < 9; ++i) {
-					f[index + size * i] = weights[i];
-				}
 
-				rho[index] = 1;
-				ux[index]  = 0;
-				uy[index]  = 0;
-			}
+			rho[index] = 1;
+			ux[index]  = 0;
+			uy[index]  = 0;
 		}
 	}
 }
@@ -431,4 +428,13 @@ void Lbm::write(std::ofstream &out) {
 
 int Lbm::get_frame_count() {
 	return it;
+}
+
+
+void Lbm::debug(std::ostream &out) {
+	out << "width    " << width    << std::endl;
+	out << "height   " << height   << std::endl;
+	out << "reynolds " << reynolds << std::endl;
+
+	// @TODO: tell how much the obstacles fill the screen
 }
