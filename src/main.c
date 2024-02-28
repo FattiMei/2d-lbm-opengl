@@ -4,6 +4,9 @@
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
 #include "lbm.h"
 #include "window.h"
 #include "experiment.h"
@@ -46,13 +49,21 @@ int main(int argc, char *argv[]) {
 		exit(EXIT_FAILURE);
 	}
 
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO(); (void) io;
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+
+	ImGui::StyleColorsDark();
+	ImGui_ImplGlfw_InitForOpenGL(window, true);
+	ImGui_ImplOpenGL3_Init("#version 100");
+
 	experiment_init(window_width, window_height);
 	window_set_callbacks();
 
 	int frames_saved = 0;
 	while (!window_should_close()) {
 		experiment_render();
-
 		lbm.step();
 
 		if (lbm.get_frame_count() % 100 == 0) {
@@ -65,9 +76,22 @@ int main(int argc, char *argv[]) {
 			}
 		}
 
+
+		ImGui_ImplOpenGL3_NewFrame();
+		ImGui_ImplGlfw_NewFrame();
+		ImGui::NewFrame();
+		ImGui::ShowDemoWindow();
+
+		ImGui::Render();
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
 		window_swap_buffers();
 		window_poll_events();
 	}
+
+	ImGui_ImplOpenGL3_Shutdown();
+	ImGui_ImplGlfw_Shutdown();
+	ImGui::DestroyContext();
 
 	window_close();
 
