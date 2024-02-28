@@ -2,6 +2,12 @@
 #define __WINDOW_H__
 
 
+#include <GLFW/glfw3.h>
+
+
+extern GLFWwindow* window;
+
+
 int  window_init(const char *title, int width, int height);
 void window_set_hints(const int hints[][2], int n);
 void window_set_callbacks();

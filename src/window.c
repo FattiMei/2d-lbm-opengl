@@ -44,7 +44,7 @@ static const int default_window_hints[][2] = {
 };
 
 
-static GLFWwindow *window = NULL;
+GLFWwindow *window = NULL;
 
 
 static void error_callback(int error, const char* description) {
