@@ -72,7 +72,8 @@ GLint shader_load_from_file(GLenum type, const char *filename) {
 			return -1;
 		}
 
-		fread(buffer, sizeof(char), numbytes, fp);
+		int unused = fread(buffer, sizeof(char), numbytes, fp);
+		(void) unused;
 		buffer[numbytes] = '\0';
 
 		shader = shader_load(type, buffer, NULL);

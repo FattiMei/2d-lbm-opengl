@@ -435,6 +435,8 @@ void Lbm::debug(std::ostream &out) {
 	out << "width    " << width    << std::endl;
 	out << "height   " << height   << std::endl;
 	out << "reynolds " << reynolds << std::endl;
+	out << "max_it   " << max_it   << std::endl;
+	out << "u_in     " << u_in     << std::endl;
 
-	// @TODO: tell how much the obstacles fill the screen
+	// @maybe: tell how much the obstacles fill the screen
 }

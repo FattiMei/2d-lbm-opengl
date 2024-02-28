@@ -2,6 +2,7 @@
 #define __LBM_H__
 
 
+#include <iostream>
 #include <fstream>
 
 
@@ -66,6 +67,7 @@ class Lbm {
 		void step();
 		void write(std::ofstream &out);
 		int get_frame_count();
+		void debug(std::ostream &out = std::cout);
 
 	private:
 		int it;
