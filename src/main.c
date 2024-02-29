@@ -62,25 +62,37 @@ int main(int argc, char *argv[]) {
 	window_set_callbacks();
 
 	int frames_saved = 0;
-	while (!window_should_close()) {
-		experiment_render();
-		lbm.step();
+	(void) frames_saved;
 
-		if (lbm.get_frame_count() % 100 == 0) {
-			if (frames_saved < MAX_FRAMES_SAVED) {
-				lbm.write(out);
-				++frames_saved;
-			}
-			else {
-				break;
-			}
-		}
+	while (!window_should_close()) {
+		glfwGetFramebufferSize(window, &window_width, &window_height);
+
+//		if (lbm.get_frame_count() % 100 == 0) {
+//			if (frames_saved < MAX_FRAMES_SAVED) {
+//				lbm.write(out);
+//				++frames_saved;
+//			}
+//			else {
+//				break;
+//			}
+//		}
 
 
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
+
+		experiment_resize(window_width, window_height);
+		experiment_render();
+		lbm.step();
+
 		ImGui::ShowDemoWindow();
+
+		{
+			ImGui::Begin("lbm debug window");
+			ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
+			ImGui::End();
+		}
 
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

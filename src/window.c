@@ -103,7 +103,7 @@ int window_init(const char *title, int width, int height) {
 	}
 
 	glfwMakeContextCurrent(window);
-	glfwSwapInterval(1);
+	glfwSwapInterval(0);
 
 	return 0;
 }
