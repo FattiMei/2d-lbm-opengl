@@ -15,6 +15,15 @@ This project started as a fork of [2d-lbm-cuda](https://github.com/AndreaTorti-0
 I want to make scientific software that is portable, interactive and uses modern GPUs for real time rendering of experiments.
 
 
+## Steps in development
+ * ImGui interactivity
+   - start/stop the iterations
+   - reload the experiment
+   - count the FPS
+ * make rendering on the texture a method of the lbm class
+ * optimize the cpu computation
+
+
 ## Dependencies
  * opengl es 2.0 (will eventually be ported to opengl 4.6)
  * glfw3 (libglfw3-dev for ubuntu and debian systems)
