@@ -1,4 +1,5 @@
 #include "lbm.h"
+#include "experiment.h"
 #include <cstdlib>
 #include <cstring>
 #include <cmath>
@@ -193,6 +194,7 @@ void lbm_substep1(
 	};
 
 
+#pragma omp parallel for
 	for (int row = 0; row < height; ++row) {
 		for (int col = 0; col < width; ++col) {
 			const int index = row * width + col;
@@ -406,11 +408,23 @@ void lbm_step(int it) {
 Lbm::Lbm(FILE *in) {
 	lbm_setup(in);
 	it = 0;
+
+	texture = std::make_unique<Texture>(width, height);
 }
 
 
 void Lbm::step() {
 	lbm_step(it++);
+}
+
+
+void Lbm::render(int window_width, int window_height) {
+	render_on_texture();
+
+	glViewport(0, 0, window_width, window_height);
+	glClear(GL_COLOR_BUFFER_BIT);
+	glUseProgram(program);
+	glDrawArrays(GL_TRIANGLES, 0, 6);
 }
 
 
@@ -439,4 +453,56 @@ void Lbm::debug(std::ostream &out) {
 	out << "u_in     " << u_in     << std::endl;
 
 	// @maybe: tell how much the obstacles fill the screen
+}
+
+
+static float colormap_red(float x) {
+	return 4.04377880184332E+00 * x - 5.17956989247312E+02;
+}
+
+
+static float colormap_green(float x) {
+	if (x < (5.14022177419355E+02 + 1.13519230769231E+01) / (4.20313644688645E+00 + 4.04233870967742E+00)) {
+		return 4.20313644688645E+00 * x - 1.13519230769231E+01;
+	} else {
+		return -4.04233870967742E+00 * x + 5.14022177419355E+02;
+	}
+}
+
+
+static float colormap_blue(float x) {
+	if (x < 1.34071303331385E+01 / (4.25125657510228E+00 - 1.0)) { // 4.12367649967
+		return x;
+	} else if (x < (255.0 + 1.34071303331385E+01) / 4.25125657510228E+00) { // 63.1359518278
+		return 4.25125657510228E+00 * x - 1.34071303331385E+01;
+	} else if (x < (1.04455240613432E+03 - 255.0) / 4.11010047593866E+00) { // 192.100512082
+		return 255.0;
+	} else {
+		return -4.11010047593866E+00 * x + 1.04455240613432E+03;
+	}
+}
+
+
+void Lbm::render_on_texture() {
+	for (int i = 0; i < width * height; ++i) {
+		unsigned char *base = texture->buffer + 3 * i;
+
+		if (obstacles[i]) {
+			base[0] = 255;
+			base[1] = 255;
+			base[2] = 255;
+		}
+		else {
+			// assuming u_out is in [0, 0.3]
+			const float u = 255.0f * u_out[i] / 0.3;
+
+			base[0] = (unsigned char) floor(colormap_red(u));
+			base[1] = (unsigned char) floor(colormap_green(u));
+			base[2] = (unsigned char) floor(colormap_blue(u));
+		}
+	}
+
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, texture->buffer);
+	glGenerateMipmap(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D, texture->id);
 }

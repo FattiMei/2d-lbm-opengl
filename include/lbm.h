@@ -4,6 +4,8 @@
 
 #include <iostream>
 #include <fstream>
+#include <memory>
+#include "texture.h"
 
 
 extern int width,
@@ -65,6 +67,7 @@ class Lbm {
 		Lbm(int width_, int height_, float reynolds_, float inlet_, bool obstacles_[]);
 		Lbm(FILE *in);
 		void step();
+		void render(int window_width, int window_height);
 		void write(std::ofstream &out);
 		int get_frame_count();
 		void debug(std::ostream &out = std::cout);
@@ -72,6 +75,9 @@ class Lbm {
 	private:
 		int it;
 		bool first_write = true;
+		std::unique_ptr<Texture> texture;
+
+		void render_on_texture();
 };
 
 

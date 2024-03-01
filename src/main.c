@@ -82,8 +82,7 @@ int main(int argc, char *argv[]) {
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 
-		experiment_resize(window_width, window_height);
-		experiment_render();
+		lbm.render(window_width, window_height);
 		lbm.step();
 
 		ImGui::ShowDemoWindow();
