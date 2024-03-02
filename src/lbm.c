@@ -398,6 +398,12 @@ void lbm_init(FILE *in) {
 }
 
 
+void lbm_reload() {
+	lbm_reset_field(f, rho, ux, uy, width, height, obstacles);
+	iteration = 0;
+}
+
+
 void lbm_step() {
 	const float u_in_now = u_in * (1.0 - exp(-(iteration * iteration) / double_square_sigma));
 

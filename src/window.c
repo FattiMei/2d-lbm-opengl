@@ -2,6 +2,7 @@
 #include <GLFW/glfw3.h>
 #include <stdio.h>
 #include "experiment.h"
+#include "lbm.h"
 
 
 static const int default_window_hints[][2] = {
@@ -68,6 +69,12 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
 		glfwSetWindowShouldClose(window, GLFW_TRUE);
+	}
+	else if (key == GLFW_KEY_SPACE && action == GLFW_PRESS) {
+		paused = !paused;
+	}
+	else if (key == GLFW_KEY_R && action == GLFW_PRESS) {
+		lbm_reload();
 	}
 }
 

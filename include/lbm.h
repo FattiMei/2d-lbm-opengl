@@ -14,6 +14,7 @@ extern bool *obstacles;
 
 void lbm_init(FILE *in);
 void lbm_step();
+void lbm_reload();
 void lbm_write(FILE *out);
 
 /*

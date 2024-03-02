@@ -3,9 +3,11 @@
 
 
 #include <GLFW/glfw3.h>
+#include <stdbool.h>
 
 
 extern GLFWwindow* window;
+extern bool paused;
 
 
 int  window_init(const char *title, int width, int height);

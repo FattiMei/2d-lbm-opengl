@@ -5,6 +5,9 @@
 #include "experiment.h"
 
 
+bool paused = false;
+
+
 int main(int argc, char *argv[]) {
 	int window_width = 800;
 	int window_height = 600;
@@ -47,7 +50,10 @@ int main(int argc, char *argv[]) {
 	window_set_callbacks();
 
 	while (!window_should_close()) {
-		lbm_step();
+		if (!paused) {
+			lbm_step();
+		}
+
 		experiment_render();
 
 		window_swap_buffers();
