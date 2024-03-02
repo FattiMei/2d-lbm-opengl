@@ -31,7 +31,7 @@ int main(int argc, char *argv[]) {
 	}
 
 
-	lbm_setup(in);
+	lbm_init(in);
 
 
 	for (int it = 0, frames_saved = 0; frames_saved < MAX_FRAMES_SAVED; ++it) {

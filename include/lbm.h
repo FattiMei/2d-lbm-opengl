@@ -10,7 +10,7 @@ extern int height;
 extern float *u_out;
 
 
-void lbm_setup(FILE *in);
+void lbm_init(FILE *in);
 void lbm_step();
 void lbm_write(FILE *out);
 

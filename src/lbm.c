@@ -40,7 +40,7 @@ float *ux,
       *u_out;
 
 
-static void lbm_init(
+static void lbm_reset_field(
 	  float f[]
 	, float rho[]
 	, float ux[]
@@ -357,7 +357,7 @@ static void lbm_substep2(
 }
 
 
-void lbm_setup(FILE *in) {
+void lbm_init(FILE *in) {
 	int read = fscanf(in, "%d %d\n%f %d %f\n", &width, &height, &reynolds, &max_it, &u_in);
 	(void) read;
 
@@ -394,7 +394,7 @@ void lbm_setup(FILE *in) {
 
 
 	lbm_calc_boundary(boundary, obstacles, width, height);
-	lbm_init(f, rho, ux, uy, width, height, obstacles);
+	lbm_reset_field(f, rho, ux, uy, width, height, obstacles);
 }
 
 
@@ -421,7 +421,7 @@ void lbm_write(FILE *out) {
 
 /*
 Lbm::Lbm(FILE *in) {
-	lbm_setup(in);
+	lbm_init(in);
 	it = 0;
 
 	texture = std::make_unique<Texture>(width, height);
