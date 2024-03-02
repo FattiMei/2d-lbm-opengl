@@ -1,11 +1,8 @@
 #include "lbm.h"
+#include <stdbool.h>
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
-// #include "experiment.h"
-// #include <cstdlib>
-// #include <cstring>
-// #include <cmath>
 
 
 static int iteration = 0;
@@ -43,50 +40,7 @@ float *ux,
       *u_out;
 
 
-// @TODO: add static attribute to internally used functions
-// @TODO: add function signatures here
-void lbm_setup(FILE *in) {
-	int read = fscanf(in, "%d %d\n%f %d %f\n", &width, &height, &reynolds, &max_it, &u_in);
-	(void) read;
-
-
-	nu = u_in * (float) (height) / reynolds * 2.0 / 3.0;
-	tau = 3.0 * nu + 0.5;
-	sigma = ceil(10.0 * height);
-	double_square_sigma = 2.0 * sigma * sigma;
-	lambda_trt = 1.0 / 4.0;
-	tau_minus = lambda_trt / (tau - 0.5) + 0.5;
-	omega_plus = 1.0 / tau;
-	omega_minus = 1.0 / tau_minus;
-	sub_param = 0.5 * (omega_plus - omega_minus);
-	sum_param = 0.5 * (omega_plus + omega_minus);
-
-
-	obstacles = (bool  *) malloc(width * height * sizeof(bool));
-	ux        = (float *) malloc(width * height * sizeof(float));
-	uy        = (float *) malloc(width * height * sizeof(float));
-	u_out     = (float *) malloc(width * height * sizeof(float));
-	rho       = (float *) malloc(width * height * sizeof(float));
-	f         = (float *) malloc(9 * width * height * sizeof(float));
-	new_f     = (float *) malloc(9 * width * height * sizeof(float));
-	boundary  = (int   *) malloc(4 * width * height * sizeof(int));
-
-
-	// this procedure could be astracted away
-	int x, y;
-	memset(obstacles, 0, width * height * sizeof(bool));
-	while (fscanf(in, "%d %d\n", &x, &y) == 2) {
-		obstacles[x + y * width] = true;
-	}
-	fclose(in);
-
-
-	lbm_calc_boundary(boundary, obstacles, width, height);
-	lbm_init(f, rho, ux, uy, width, height, obstacles);
-}
-
-
-void lbm_init(
+static void lbm_init(
 	  float f[]
 	, float rho[]
 	, float ux[]
@@ -128,7 +82,7 @@ void lbm_init(
 }
 
 
-void lbm_calc_boundary(
+static void lbm_calc_boundary(
 	  int boundary[]
 	, const bool obstacles[]
 	, const int width
@@ -163,7 +117,7 @@ void lbm_calc_boundary(
 }
 
 
-void lbm_substep1(
+static void lbm_substep1(
 	  const int width
 	, const int height
 	, const int it
@@ -358,7 +312,7 @@ void lbm_substep1(
 }
 
 
-void lbm_substep2(
+static void lbm_substep2(
 		const int width
 		, const int height
 		, float f[]
@@ -400,6 +354,47 @@ void lbm_substep2(
 
 	#undef F
 	#undef NEW_F
+}
+
+
+void lbm_setup(FILE *in) {
+	int read = fscanf(in, "%d %d\n%f %d %f\n", &width, &height, &reynolds, &max_it, &u_in);
+	(void) read;
+
+
+	nu = u_in * (float) (height) / reynolds * 2.0 / 3.0;
+	tau = 3.0 * nu + 0.5;
+	sigma = ceil(10.0 * height);
+	double_square_sigma = 2.0 * sigma * sigma;
+	lambda_trt = 1.0 / 4.0;
+	tau_minus = lambda_trt / (tau - 0.5) + 0.5;
+	omega_plus = 1.0 / tau;
+	omega_minus = 1.0 / tau_minus;
+	sub_param = 0.5 * (omega_plus - omega_minus);
+	sum_param = 0.5 * (omega_plus + omega_minus);
+
+
+	obstacles = (bool  *) malloc(width * height * sizeof(bool));
+	ux        = (float *) malloc(width * height * sizeof(float));
+	uy        = (float *) malloc(width * height * sizeof(float));
+	u_out     = (float *) malloc(width * height * sizeof(float));
+	rho       = (float *) malloc(width * height * sizeof(float));
+	f         = (float *) malloc(9 * width * height * sizeof(float));
+	new_f     = (float *) malloc(9 * width * height * sizeof(float));
+	boundary  = (int   *) malloc(4 * width * height * sizeof(int));
+
+
+	// this procedure could be astracted away
+	int x, y;
+	memset(obstacles, 0, width * height * sizeof(bool));
+	while (fscanf(in, "%d %d\n", &x, &y) == 2) {
+		obstacles[x + y * width] = true;
+	}
+	fclose(in);
+
+
+	lbm_calc_boundary(boundary, obstacles, width, height);
+	lbm_init(f, rho, ux, uy, width, height, obstacles);
 }
 
 
