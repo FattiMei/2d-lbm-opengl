@@ -3,11 +3,13 @@
 
 
 #include <stdio.h>
+#include <stdbool.h>
 
 
 extern int width;
 extern int height;
 extern float *u_out;
+extern bool *obstacles;
 
 
 void lbm_init(FILE *in);

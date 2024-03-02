@@ -1,37 +1,53 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "window.h"
-
-
-void experiment_init(int width, int height) {
-	glViewport(0, 0, width, height);
-}
-
-
-void experiment_render() {
-	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT);
-}
-
-
-void experiment_resize(int width, int height) {
-	glViewport(0, 0, width, height);
-}
+#include "lbm.h"
+#include "experiment.h"
 
 
 int main(int argc, char *argv[]) {
-	int width = 800;
-	int height = 600;
+	int window_width = 800;
+	int window_height = 600;
 
-	if (window_init("lbm on opengl", width, height) != 0) {
+
+	if (argc != 3) {
+		fprintf(stderr, "Invalid command line arguments\n");
+		fprintf(stderr, "Usage: ./headless <input filename> <binary output filename>\n");
+		exit(EXIT_FAILURE);
+	}
+
+
+	FILE *in  = fopen(argv[1], "r");
+	FILE *out = fopen(argv[2], "w");
+
+
+	if (in == NULL) {
+		fprintf(stderr, "Could not open input file %s\n", argv[1]);
+		exit(EXIT_FAILURE);
+	}
+
+
+	if (out == NULL) {
+		fprintf(stderr, "Could not open output file %s\n", argv[2]);
+		fclose(in);
+		exit(EXIT_FAILURE);
+	}
+
+
+	lbm_init(in);
+
+
+	if (window_init("lbm on opengl", window_width, window_height) != 0) {
 		window_close();
 		exit(EXIT_FAILURE);
 	}
 
-	experiment_init(width, height);
+
+	experiment_init(window_width, window_height);
 	window_set_callbacks();
 
 	while (!window_should_close()) {
+		lbm_step();
 		experiment_render();
 
 		window_swap_buffers();

@@ -18,7 +18,7 @@ targets  += $(imgui_objects)
 all: serial headless
 
 
-serial: build/main.o build/window.o
+serial: build/main.o build/window.o build/experiment.o build/lbm.o build/shader.o
 	$(CC) -o $@ $^ $(LIBS)
 
 
