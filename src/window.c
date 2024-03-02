@@ -5,46 +5,6 @@
 #include "lbm.h"
 
 
-#ifdef USE_OPENGLES2
-static const int default_window_hints[][2] = {
-	{GLFW_RESIZABLE			, GLFW_TRUE			},
-	{GLFW_VISIBLE			, GLFW_TRUE			},
-	{GLFW_DECORATED			, GLFW_TRUE			},
-	{GLFW_FOCUSED			, GLFW_TRUE			},
-	{GLFW_AUTO_ICONIFY		, GLFW_TRUE			},
-	{GLFW_FLOATING			, GLFW_FALSE			},
-	{GLFW_MAXIMIZED			, GLFW_FALSE			},
-	{GLFW_CENTER_CURSOR		, GLFW_TRUE			},
-	{GLFW_TRANSPARENT_FRAMEBUFFER	, GLFW_FALSE			},
-	{GLFW_FOCUS_ON_SHOW		, GLFW_TRUE			},
-	{GLFW_SCALE_TO_MONITOR		, GLFW_FALSE			},
-	{GLFW_RED_BITS			, 8				},
-	{GLFW_GREEN_BITS		, 8				},
-	{GLFW_BLUE_BITS			, 8				},
-	{GLFW_ALPHA_BITS		, 8				},
-	{GLFW_DEPTH_BITS		, 24				},
-	{GLFW_STENCIL_BITS		, 8				},
-	{GLFW_ACCUM_RED_BITS		, 0				},
-	{GLFW_ACCUM_GREEN_BITS		, 0				},
-	{GLFW_ACCUM_BLUE_BITS		, 0				},
-	{GLFW_ACCUM_ALPHA_BITS		, 0				},
-	{GLFW_AUX_BUFFERS		, 0				},
-	{GLFW_SAMPLES			, 0				},
-	{GLFW_REFRESH_RATE		, GLFW_DONT_CARE		},
-	{GLFW_STEREO			, GLFW_FALSE			},
-	{GLFW_SRGB_CAPABLE		, GLFW_FALSE			},
-	{GLFW_DOUBLEBUFFER		, GLFW_TRUE			},
-	{GLFW_CLIENT_API		, GLFW_OPENGL_ES_API		},
-	{GLFW_CONTEXT_CREATION_API	, GLFW_EGL_CONTEXT_API		},
-	{GLFW_CONTEXT_VERSION_MAJOR	, 2				},
-	{GLFW_CONTEXT_VERSION_MINOR	, 0				},
-	{GLFW_CONTEXT_ROBUSTNESS	, GLFW_NO_ROBUSTNESS		},
-	{GLFW_CONTEXT_RELEASE_BEHAVIOR	, GLFW_ANY_RELEASE_BEHAVIOR	},
-	{GLFW_OPENGL_FORWARD_COMPAT	, GLFW_FALSE			},
-	{GLFW_OPENGL_DEBUG_CONTEXT	, GLFW_FALSE			},
-	{GLFW_OPENGL_PROFILE		, GLFW_OPENGL_ANY_PROFILE	}
-};
-#else
 static const int default_window_hints[][2] = {
 	{GLFW_RESIZABLE			, GLFW_TRUE			},
 	{GLFW_VISIBLE			, GLFW_TRUE			},
@@ -75,7 +35,7 @@ static const int default_window_hints[][2] = {
 	{GLFW_DOUBLEBUFFER		, GLFW_TRUE			},
 	{GLFW_CLIENT_API		, GLFW_OPENGL_API		},
 	{GLFW_CONTEXT_CREATION_API	, GLFW_NATIVE_CONTEXT_API	},
-	{GLFW_CONTEXT_VERSION_MAJOR	, 3				},
+	{GLFW_CONTEXT_VERSION_MAJOR	, 4				},
 	{GLFW_CONTEXT_VERSION_MINOR	, 3				},
 	{GLFW_CONTEXT_ROBUSTNESS	, GLFW_NO_ROBUSTNESS		},
 	{GLFW_CONTEXT_RELEASE_BEHAVIOR	, GLFW_ANY_RELEASE_BEHAVIOR	},
@@ -83,7 +43,6 @@ static const int default_window_hints[][2] = {
 	{GLFW_OPENGL_DEBUG_CONTEXT	, GLFW_FALSE			},
 	{GLFW_OPENGL_PROFILE		, GLFW_OPENGL_ANY_PROFILE	}
 };
-#endif
 
 
 GLFWwindow *window = NULL;
@@ -116,6 +75,8 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 	}
 	else if (key == GLFW_KEY_R && action == GLFW_PRESS) {
 		lbm_reload();
+
+		// @TODO: reload should render the initial state
 	}
 }
 

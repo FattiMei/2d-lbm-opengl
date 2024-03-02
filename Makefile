@@ -2,10 +2,7 @@ CC       = gcc
 CCFLAGS  = -Wall
 OPTFLAGS = -O2 -fopenmp
 INCLUDE  = -I ./include
-LIBS     = -lm -lglfw -lEGL -lGL -ldl
-
-
-# CONFIG = -DUSE_OPENGLES2
+LIBS     = -lm -lglfw -lGL -ldl
 
 
 sources  = $(wildcard src/*.c)
