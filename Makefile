@@ -5,6 +5,9 @@ INCLUDE  = -I ./include
 LIBS     = -lm -lglfw -lEGL -lGL -ldl
 
 
+CONFIG = -DUSE_OPENGLES2
+
+
 sources  = $(wildcard src/*.c)
 examples = $(wildcard examples/*.c)
 objects  = $(patsubst src/%.c,build/%.o,$(sources))
@@ -19,15 +22,15 @@ all: serial headless
 
 
 serial: build/main.o build/window.o build/experiment.o build/lbm.o build/shader.o
-	$(CC) $(OPTFLAGS) -o $@ $^ $(LIBS)
+	$(CC) $(OPTFLAGS) $(CONFIG) -o $@ $^ $(LIBS)
 
 
 headless: build/headless.o build/lbm.o
-	$(CC) $(OPTFLAGS) -o $@ $^ -lm
+	$(CC) $(OPTFLAGS) $(CONFIG) -o $@ $^ -lm
 
 
 build/%.o: src/%.c
-	$(CC) -c $(INCLUDE) $(CCFLAGS) $(OPTFLAGS) -o $@ $^
+	$(CC) -c $(INCLUDE) $(CCFLAGS) $(OPTFLAGS) $(CONFIG) -o $@ $^
 
 
 output.bin: headless
