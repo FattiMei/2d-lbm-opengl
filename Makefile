@@ -5,7 +5,7 @@ INCLUDE  = -I ./include
 LIBS     = -lm -lglfw -lEGL -lGL -ldl
 
 
-CONFIG = -DUSE_OPENGLES2
+# CONFIG = -DUSE_OPENGLES2
 
 
 sources  = $(wildcard src/*.c)
