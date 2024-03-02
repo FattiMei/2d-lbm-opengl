@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
+#define GLAD_GL_IMPLEMENTATION
+#include "glad.h"
 #include "window.h"
 #include "lbm.h"
 #include "experiment.h"
@@ -47,6 +49,9 @@ int main(int argc, char *argv[]) {
 		window_close();
 		exit(EXIT_FAILURE);
 	}
+
+
+	gladLoadGL(glfwGetProcAddress);
 
 
 	experiment_init(window_width, window_height);

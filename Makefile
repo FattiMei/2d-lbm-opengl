@@ -21,7 +21,7 @@ targets  += $(imgui_objects)
 all: serial headless
 
 
-serial: build/main.o build/window.o build/experiment.o build/lbm.o build/shader.o build/glad.o
+serial: build/main.o build/window.o build/experiment.o build/lbm.o build/shader.o
 	$(CC) $(OPTFLAGS) $(CONFIG) -o $@ $^ $(LIBS)
 
 

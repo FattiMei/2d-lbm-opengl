@@ -1,6 +1,7 @@
 #include "experiment.h"
 #include "shader.h"
 #include "lbm.h"
+#include "glad.h"
 #include <GLES2/gl2.h>
 #include <EGL/egl.h>
 #include <stdlib.h>
@@ -9,7 +10,7 @@
 
 
 GLuint texture;
-GLint program;
+unsigned int program;
 unsigned char *texture_buffer;
 
 
