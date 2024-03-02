@@ -31,3 +31,7 @@ I want to make scientific software that is portable, interactive and uses modern
 
 ## Usage
 `make run`
+
+
+## Atomic bug
+Right now there is a serious bug with the compiling and executing the application: every time I open the executable there is a chance to get a segfault and I don't know why. The next development steps will fix this issue, see you from the other side.
