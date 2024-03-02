@@ -1,8 +1,7 @@
-CC       = g++
+CC       = gcc
 CCFLAGS  = -Wall
 OPTFLAGS = -O2 -fopenmp
 INCLUDE  = -I ./include
-IMGUI_INCLUDE = -I ./imgui
 LIBS     = -lm -lglfw -lEGL -lGL -ldl
 
 
@@ -21,7 +20,7 @@ targets  += $(imgui_objects)
 all: serial
 
 
-serial: $(targets)
+serial: build/main.o build/window.o
 	$(CC) $(CCFLAGS) $(OPTFLAGS) -o $@ $^ $(LIBS)
 
 
