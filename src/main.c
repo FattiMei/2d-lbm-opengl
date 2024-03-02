@@ -7,9 +7,6 @@
 #include "experiment.h"
 
 
-#define FRAME_COUNT 100
-
-
 bool paused = false;
 
 
@@ -57,8 +54,6 @@ int main(int argc, char *argv[]) {
 	experiment_init(window_width, window_height);
 	window_set_callbacks();
 
-	int frames = 0;
-	double before = glfwGetTime();
 
 	while (!window_should_close()) {
 		if (!paused) {
@@ -69,19 +64,6 @@ int main(int argc, char *argv[]) {
 
 		window_swap_buffers();
 		window_poll_events();
-
-
-		++frames;
-		if (frames == FRAME_COUNT) {
-			double now = glfwGetTime();
-			double delta = now - before;
-
-			printf("Generated %d frames in %.3f seconds, FPS = %.1f\n", FRAME_COUNT, delta, ((double) FRAME_COUNT) / delta);
-			before = now;
-
-
-			frames = 0;
-		}
 	}
 
 	window_close();
