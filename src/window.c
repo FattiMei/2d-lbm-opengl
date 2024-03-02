@@ -117,7 +117,9 @@ void window_set_hints(const int hints[][2], int n) {
 
 
 void window_set_callbacks() {
-	// we are not supposed to set callbacks when working with ImGui
+	glfwSetKeyCallback            (window, key_callback);
+	glfwSetMouseButtonCallback    (window, mouse_button_callback);
+	glfwSetFramebufferSizeCallback(window, resize_callback);
 }
 
 
