@@ -1,6 +1,6 @@
 CC       = gcc
 CCFLAGS  = -Wall
-OPTFLAGS = -O2
+OPTFLAGS = -O2 -fopenmp
 INCLUDE  = -I ./include
 LIBS     = -lm -lglfw -lEGL -lGL -ldl
 
@@ -19,11 +19,11 @@ all: serial headless
 
 
 serial: build/main.o build/window.o build/experiment.o build/lbm.o build/shader.o
-	$(CC) -o $@ $^ $(LIBS)
+	$(CC) $(OPTFLAGS) -o $@ $^ $(LIBS)
 
 
 headless: build/headless.o build/lbm.o
-	$(CC) -o $@ $^ -lm
+	$(CC) $(OPTFLAGS) -o $@ $^ -lm
 
 
 build/%.o: src/%.c

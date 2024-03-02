@@ -85,34 +85,29 @@ static float colormap_blue(float x) {
 }
 
 
-
-
-// suppose to know the u_out variable and the obstacles variable
 void experiment_populate_texture() {
-	// dummy texture generation
-	for (int row = 0; row < height; ++row) {
-		for (int col = 0; col < width; ++col) {
-			unsigned char *base = texture_buffer + 3 * (row * width + col);
+	#pragma omp parallel for
+	for (int i = 0; i < width * height; ++i) {
+		unsigned char *base = texture_buffer + 3 * i;
 
-			if (obstacles[row * width + col]) {
-				base[0] = 255;
-				base[1] = 255;
-				base[2] = 255;
-			}
-			else {
-				// assuming u_out is in [0, 0.3]
-				const float u = 255.0f * u_out[row * width + col] / 0.3;
+		if (obstacles[i]) {
+			base[0] = 255;
+			base[1] = 255;
+			base[2] = 255;
+		}
+		else {
+			// assuming u_out is in [0, 0.3]
+			const float u = 255.0f * u_out[i] / 0.3;
 
-				base[0] = (unsigned char) floor(colormap_red(u));
-				base[1] = (unsigned char) floor(colormap_green(u));
-				base[2] = (unsigned char) floor(colormap_blue(u));
-			}
+			base[0] = (unsigned char) floor(colormap_red(u));
+			base[1] = (unsigned char) floor(colormap_green(u));
+			base[2] = (unsigned char) floor(colormap_blue(u));
 		}
 	}
 
+
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, texture_buffer);
 	glGenerateMipmap(GL_TEXTURE_2D);
-
 	glBindTexture(GL_TEXTURE_2D, texture);
 }
 
