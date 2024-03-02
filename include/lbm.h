@@ -2,10 +2,16 @@
 #define __LBM_H__
 
 
+#include <stdio.h>
+#include <stdbool.h>
+
+
+/*
 #include <iostream>
 #include <fstream>
 #include <memory>
 #include "texture.h"
+*/
 
 
 extern int width,
@@ -61,6 +67,7 @@ void lbm_calc_boundary(
 void lbm_setup(FILE *in);
 void lbm_step(int it);
 
+/*
 
 class Lbm {
 	public:
@@ -79,6 +86,7 @@ class Lbm {
 
 		void render_on_texture();
 };
+*/
 
 
 #endif

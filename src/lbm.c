@@ -1,8 +1,11 @@
 #include "lbm.h"
-#include "experiment.h"
-#include <cstdlib>
-#include <cstring>
-#include <cmath>
+#include <stdlib.h>
+#include <math.h>
+#include <string.h>
+// #include "experiment.h"
+// #include <cstdlib>
+// #include <cstring>
+// #include <cmath>
 
 
 int width,
@@ -194,7 +197,6 @@ void lbm_substep1(
 	};
 
 
-#pragma omp parallel for
 	for (int row = 0; row < height; ++row) {
 		for (int col = 0; col < width; ++col) {
 			const int index = row * width + col;
@@ -405,6 +407,7 @@ void lbm_step(int it) {
 }
 
 
+/*
 Lbm::Lbm(FILE *in) {
 	lbm_setup(in);
 	it = 0;
@@ -506,3 +509,4 @@ void Lbm::render_on_texture() {
 	glGenerateMipmap(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, texture->id);
 }
+*/

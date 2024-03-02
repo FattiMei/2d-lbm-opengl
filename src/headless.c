@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include "lbm.h"
 
 
 #define MAX_FRAMES_SAVED 40
@@ -30,15 +31,23 @@ int main(int argc, char *argv[]) {
 	}
 
 
+	lbm_setup(in);
+
+	fprintf(out, "%d %d\n", width, height);
+
 	for (int it = 0, frames_saved = 0; frames_saved < MAX_FRAMES_SAVED; ++it) {
 		if (it % 100 == 0) {
 			// write lbm on file
+			fprintf(out, "%d\n", it);
+			fwrite(u_out, sizeof(float), width * height, out);
+
 			++frames_saved;
 		}
+
+		lbm_step(it);
 	}
 
 
-	fclose(in);
 	fclose(out);
 
 
