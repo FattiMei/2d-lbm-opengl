@@ -65,7 +65,8 @@ void lbm_calc_boundary(
 
 
 void lbm_setup(FILE *in);
-void lbm_step(int it);
+void lbm_step();
+void lbm_write(FILE *out);
 
 /*
 

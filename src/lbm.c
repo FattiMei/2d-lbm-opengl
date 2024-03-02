@@ -8,6 +8,10 @@
 // #include <cmath>
 
 
+static int iteration = 0;
+static bool first_write = true;
+
+
 int width,
     height,
     max_it;
@@ -399,11 +403,24 @@ void lbm_substep2(
 }
 
 
-void lbm_step(int it) {
-	const float u_in_now = u_in * (1.0 - exp(-(it * it) / double_square_sigma));
+void lbm_step() {
+	const float u_in_now = u_in * (1.0 - exp(-(iteration * iteration) / double_square_sigma));
 
-	lbm_substep1(width, height, it, u_in_now, omega_plus, sum_param, sub_param, f, new_f, rho, ux, uy, u_out, boundary, obstacles);
+	lbm_substep1(width, height, iteration, u_in_now, omega_plus, sum_param, sub_param, f, new_f, rho, ux, uy, u_out, boundary, obstacles);
 	lbm_substep2(width, height, f, new_f, obstacles);
+
+	++iteration;
+}
+
+
+void lbm_write(FILE *out) {
+	if (first_write) {
+		fprintf(out, "%d %d\n", width, height);
+		first_write = false;
+	}
+
+	fprintf(out, "%d\n", iteration);
+	fwrite(u_out, sizeof(float), width * height, out);
 }
 
 
