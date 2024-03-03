@@ -5,11 +5,13 @@
 #include "glad.h"
 #include <stdlib.h>
 #include <math.h>
+#include <string.h>
 
 
 GLuint texture;
 unsigned int program;
 unsigned int compute_shader_program;
+unsigned int u_buffer;
 unsigned char *texture_buffer;
 
 
@@ -59,14 +61,19 @@ const char* fragment_shader_src = R"(
 
 const char* compute_shader_src = R"(
 	#version 430 core
-	layout (local_size_x = 10, local_size_y = 10, local_size_z = 1) in;
+	layout (local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
 
+	layout (std430, binding = 0) buffer U {
+		float u_out[];
+	};
 	layout (location = 0) writeonly uniform image2D imgOutput;
+	layout (location = 1) uniform ivec2 shape;
 
 	void main() {
 		uvec2 index = gl_GlobalInvocationID.xy;
 
-		vec4 color = vec4(0.5, 0.2, 0.7, 1.0);
+		// hack
+		vec4 color = vec4(u_out[index.y * 200 + index.x] / 0.3, 0.2, 0.7, 1.0);
 		imageStore(imgOutput, ivec2(index), color);
 	}
 )";
@@ -155,8 +162,12 @@ void experiment_init() {
 
 
 	texture_buffer = (unsigned char *) malloc(width * height * sizeof(unsigned char) * 3);
-
 	texture = texture_create(width, height);
+
+
+	glGenBuffers(1, &u_buffer);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, u_buffer);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, width * height * sizeof(float), NULL, GL_STATIC_DRAW);
 }
 
 
@@ -172,8 +183,16 @@ void experiment_render() {
 
 	// experiment_populate_texture();
 
+	float *ptr = (float *) glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, width * height * sizeof(float), GL_MAP_WRITE_BIT);
+
+	memcpy(ptr, u_out, width * height * sizeof(float));
+	glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, u_buffer);
+
+
 	glUseProgram(compute_shader_program);
-	glDispatchCompute(width / 10, height / 10, 1);
+	glDispatchCompute(width, height, 1);
 	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
 	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
