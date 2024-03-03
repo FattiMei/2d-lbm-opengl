@@ -11,6 +11,7 @@ GLint shader_load_from_file(GLenum type, const char *filename);
 
 // GLint program_load(GLint vertex_shader, GLint fragment_shader);
 GLint program_load(const GLchar *vertex_shader_src, const GLchar *fragment_shader_src);
+GLint compute_program_load(const GLchar *compute_shader_src);
 
 
 #endif

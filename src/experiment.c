@@ -8,6 +8,7 @@
 
 GLuint texture;
 unsigned int program;
+unsigned int compute_shader_program;
 unsigned char *texture_buffer;
 
 
@@ -29,7 +30,7 @@ unsigned int VAO, VBO, EBO;
 
 
 const char* vertex_shader_src = R"(
-	#version 330 core
+	#version 430 core
 	layout (location = 0) in vec2 aPos;
 	layout (location = 1) in vec2 aTexCoord;
 
@@ -43,7 +44,7 @@ const char* vertex_shader_src = R"(
 
 
 const char* fragment_shader_src = R"(
-	#version 330 core
+	#version 430 core
 	in vec2 texCoord;
 	out vec4 FragColor;
 
@@ -51,6 +52,21 @@ const char* fragment_shader_src = R"(
 
 	void main() {
 		FragColor = texture(tex, texCoord);
+	}
+)";
+
+
+const char* compute_shader_src = R"(
+	#version 430 core
+	layout (local_size_x = 10, local_size_y = 10, local_size_z = 1) in;
+
+	layout (location = 0) writeonly uniform image2D imgOutput;
+
+	void main() {
+		uvec2 index = gl_GlobalInvocationID.xy;
+
+		vec4 color = vec4(0.5, 0.2, 0.7, 1.0);
+		imageStore(imgOutput, ivec2(index), color);
 	}
 )";
 
@@ -112,6 +128,7 @@ void experiment_populate_texture() {
 // to be called after initializing lbm
 void experiment_init(int width, int height) {
 	program = program_load(vertex_shader_src, fragment_shader_src);
+	compute_shader_program = compute_program_load(compute_shader_src);
 
 
 	glGenVertexArrays(1, &VAO);
@@ -141,6 +158,17 @@ void experiment_init(int width, int height) {
 	glGenTextures(1, &texture);
 	glBindTexture(GL_TEXTURE_2D, texture);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+	// from learnopengl.com
+	// glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
+	// glBindImageTexture(0, texture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
+
+	// glActiveTexture(GL_TEXTURE0);
+	// glBindTexture(GL_TEXTURE_2D, texture);
+
+
+	// glUseProgram(compute_shader_program);
+	// glUniform1i(compute_shader_program, glGetUniformLocation(program, "imgOutput"));
 }
 
 
@@ -155,7 +183,10 @@ void experiment_render() {
 	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	glBindTexture(GL_TEXTURE_2D, texture);
+	// glUseProgram(compute_shader_program);
+	// glDispatchCompute(width / 10, height / 10, 1);
+	// glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+
 	glUseProgram(program);
 	glBindVertexArray(VAO);
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);

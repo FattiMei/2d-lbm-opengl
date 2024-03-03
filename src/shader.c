@@ -1,4 +1,5 @@
 #include "shader.h"
+#include "glad.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -99,6 +100,43 @@ GLint program_load(const GLchar *vertex_shader_src, const GLchar *fragment_shade
 
 	glAttachShader(program, vertex_shader);
 	glAttachShader(program, fragment_shader);
+	glLinkProgram(program);
+
+	glGetProgramiv(program, GL_LINK_STATUS, &linked);
+
+	if (!linked) {
+		fprintf(stderr, "Linker error:\n");
+
+		GLint info_len = 0;
+		glGetProgramiv(program, GL_INFO_LOG_LENGTH, &info_len);
+
+		if (info_len < MAX_LOG_LENGTH) {
+			glGetProgramInfoLog(program, info_len, NULL, log);
+
+			fprintf(stderr, "%s\n", log);
+			glDeleteProgram(program);
+		}
+
+		return -1;
+	}
+
+	// @TODO: delete the shaders
+
+	return program;
+}
+
+
+GLint compute_program_load(const GLchar *compute_shader_src) {
+	GLint compute_shader = shader_load(GL_COMPUTE_SHADER, compute_shader_src, NULL);
+	GLint program = glCreateProgram();
+	GLint linked;
+
+	if (program == 0) {
+		fprintf(stderr, "Error in creating program\n");
+		return -1;
+	}
+
+	glAttachShader(program, compute_shader);
 	glLinkProgram(program);
 
 	glGetProgramiv(program, GL_LINK_STATUS, &linked);
