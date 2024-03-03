@@ -9,7 +9,7 @@
 extern int width;
 extern int height;
 extern float *u_out;
-extern bool *obstacles;
+extern unsigned char *obstacles;
 
 
 void lbm_init(FILE *in);

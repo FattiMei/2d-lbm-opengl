@@ -30,13 +30,18 @@ float nu,
 
 
 int *boundary;
-bool *obstacles;
 float *ux,
       *uy,
       *f,
       *new_f,
       *rho,
       *u_out;
+
+
+// this variable was a bool, now it has become an unsigned char (same memory footprint) and we will use the possible values to store information about obstacles and walls in a bitfield fashion
+// at the moment 0 means no obstacle and 1 means obstacle
+#define IS_OBSTACLE 1
+unsigned char *obstacles;
 
 
 static void lbm_reset_field(
@@ -46,7 +51,7 @@ static void lbm_reset_field(
 	, float uy[]
 	, const int width
 	, const int height
-	, const bool obstacles[]
+	, const unsigned char obstacles[]
 ) {
 	const int size = width * height;
 	const float weights[9] = {
@@ -64,7 +69,7 @@ static void lbm_reset_field(
 
 	for (int index = 0; index < size; ++index) {
 
-		if (obstacles[index]) {
+		if (obstacles[index] & IS_OBSTACLE) {
 			ux[index] = NAN;
 			uy[index] = NAN;
 		}
@@ -84,7 +89,7 @@ static void lbm_reset_field(
 // @TODO: boundary can encode the obstacle information, while being memory efficient
 static void lbm_calc_boundary(
 	  int boundary[]
-	, const bool obstacles[]
+	, const unsigned char obstacles[]
 	, const int width
 	, const int height
 ) {
@@ -102,10 +107,10 @@ static void lbm_calc_boundary(
 				const int dy = dirs[d][1];
 
 				// check the adjacent cells in the current direction
-				if (col - dx >= 0 && row - dy >= 0 && obstacles[col - dx + (row - dy) * width]) {
+				if (col - dx >= 0 && row - dy >= 0 && (obstacles[col - dx + (row - dy) * width] & IS_OBSTACLE)) {
 					boundary[size * d + index] = -1;
 				}
-				else if (col + dx < width && row + dy < height && obstacles[col + dx + (row + dy) * width]) {
+				else if (col + dx < width && row + dy < height && (obstacles[col + dx + (row + dy) * width] & IS_OBSTACLE)) {
 					boundary[size * d + index] = 1;
 				}
 				else {
@@ -132,7 +137,7 @@ static void lbm_substep1(
         , float uy[]
 	, float u_out[]
 	, const int boundary[]
-	, const bool obstacles[]
+	, const unsigned char obstacles[]
 ) {
 	#define F(x) f[size * x + index]
 	#define NEW_F(x) new_f[size * x + index]
@@ -159,7 +164,7 @@ static void lbm_substep1(
 		for (int col = 0; col < width; ++col) {
 			const int index = row * width + col;
 
-			if(!obstacles[index]) {
+			if(!(obstacles[index] & IS_OBSTACLE)) {
 				// every computation that uses row column information is after a memory access to obstacles, but obstacles could itself give such information
 
 				// if i'm a any boundary set u to 0
@@ -319,7 +324,7 @@ static void lbm_substep2(
 		, const int height
 		, float f[]
 		, const float new_f[]
-		, const bool obstacles[]
+		, const unsigned char obstacles[]
 	      ) {
 	#define F(x) f[size * x + index]
 	#define NEW_F(x) new_f[size * x + index]
@@ -334,7 +339,7 @@ static void lbm_substep2(
 		for (int col = 0; col < width; ++col) {
 			const int index = row * width + col;
 
-			if (!obstacles[index]) {
+			if (!(obstacles[index] & IS_OBSTACLE)) {
 				// stream for index 0
 				F(0) = NEW_F(0);
 
@@ -346,7 +351,7 @@ static void lbm_substep2(
 					const int new_index = new_row * width + new_col;
 
 					// stream if new index is not out of bounds or obstacle
-					if (new_row >= 0 && new_row < height && new_col >= 0 && new_col < width && !obstacles[new_index]) {
+					if (new_row >= 0 && new_row < height && new_col >= 0 && new_col < width && !(obstacles[new_index] & IS_OBSTACLE)) {
 						f[size * i + new_index] = NEW_F(i);
 					}
 				}
@@ -376,7 +381,7 @@ void lbm_init(FILE *in) {
 	sum_param = 0.5 * (omega_plus + omega_minus);
 
 
-	obstacles = (bool  *) malloc(width * height * sizeof(bool));
+	obstacles = (unsigned char  *) malloc(width * height * sizeof(unsigned char));
 	ux        = (float *) malloc(width * height * sizeof(float));
 	uy        = (float *) malloc(width * height * sizeof(float));
 	u_out     = (float *) malloc(width * height * sizeof(float));
@@ -388,9 +393,9 @@ void lbm_init(FILE *in) {
 
 	// this procedure could be astracted away
 	int x, y;
-	memset(obstacles, 0, width * height * sizeof(bool));
+	memset(obstacles, 0, width * height * sizeof(unsigned char));
 	while (fscanf(in, "%d %d\n", &x, &y) == 2) {
-		obstacles[x + y * width] = true;
+		obstacles[x + y * width] |= IS_OBSTACLE;
 	}
 	fclose(in);
 
