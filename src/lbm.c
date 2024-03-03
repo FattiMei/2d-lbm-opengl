@@ -41,6 +41,11 @@ float *ux,
 // this variable was a bool, now it has become an unsigned char (same memory footprint) and we will use the possible values to store information about obstacles and walls in a bitfield fashion
 // at the moment 0 means no obstacle and 1 means obstacle
 #define IS_OBSTACLE 1
+#define TOP_WALL 2
+#define BOTTOM_WALL 4
+#define LEFT_WALL 8
+#define RIGHT_WALL 16
+
 unsigned char *obstacles;
 
 
@@ -159,157 +164,150 @@ static void lbm_substep1(
 		, 1.0 / 36.0
 	};
 
-
-	for (int row = 0; row < height; ++row) {
-		for (int col = 0; col < width; ++col) {
-			const int index = row * width + col;
-
-			if(!(obstacles[index] & IS_OBSTACLE)) {
-				// every computation that uses row column information is after a memory access to obstacles, but obstacles could itself give such information
-
-				// if i'm a any boundary set u to 0
-				if (row == 0 || row == height - 1 || col == 0 || col == width - 1) {
-					ux[index] = 0;
-					uy[index] = 0;
-				}
-
-				// set parabolic profile inlet
-				if (col == 0) {
-					const float halfDim = (float)(height - 1) / 2.0;
-					const float temp = (float)(row / halfDim) - 1.0;
-					const float mul = 1.0 - temp * temp;
-
-					ux[index] = u_in_now * mul;
-				}
-
-				// zou he
-
-				// top wall
-				if (row == 0 && col != 0 && col != width - 1) {
-					rho[index] = (F(0) + F(1) + F(3) + 2.0 * (F(2) + F(5) + F(6))) / (1.0 + uy[index]);
-					F(4) = F(2) - 2.0 / 3.0 * rho[index] * uy[index];
-					F(7) = F(5) + 0.5 * (F(1) - F(3)) - 0.5 * rho[index] * ux[index] - 1.0 / 6.0 * rho[index] * uy[index];
-					F(8) = F(6) - 0.5 * (F(1) - F(3)) + 0.5 * rho[index] * ux[index] - 1.0 / 6.0 * rho[index] * uy[index];
-				}
-				// right wall
-				else if (col == width - 1 && row != 0 && row != height - 1) {
-					rho[index] = 1;
-					ux[index] = F(0) + F(2) + F(4) + 2.0 * (F(1) + F(5) + F(8)) - 1.0;
-					F(3) = F(1) - 2.0 / 3.0 * ux[index];
-					F(6) = F(8) - 0.5 * (F(2) - F(4)) - 1.0 / 6.0 * ux[index];
-					F(7) = F(5) + 0.5 * (F(2) - F(4)) - 1.0 / 6.0 * ux[index];
-				}
-				// bottom wall
-				else if (row == height - 1 && col != 0 && col != width - 1) {
-					rho[index] = (F(0) + F(1) + F(3) + 2.0 * (F(4) + F(7) + F(8))) / (1.0 - uy[index]);
-					F(2) = F(4) + 2.0 / 3.0 * rho[index] * uy[index];
-					F(5) = F(7) - 0.5 * (F(1) - F(3)) + 0.5 * rho[index] * ux[index] + 1.0 / 6.0 * rho[index] * uy[index];
-					F(6) = F(8) + 0.5 * (F(1) - F(3)) - 0.5 * rho[index] * ux[index] + 1.0 / 6.0 * rho[index] * uy[index];
-				}
-				// left wall
-				else if (col == 0 && row != 0 && row != height - 1) {
-					rho[index] = (F(0) + F(2) + F(4) + 2.0 * (F(3) + F(7) + F(6))) / (1.0 - ux[index]);
-					F(1) = F(3) + 2.0 / 3.0 * rho[index] * ux[index];
-					F(5) = F(7) - 0.5 * (F(2) - F(4)) + 1.0 / 6.0 * rho[index] * ux[index] + 0.5 * rho[index] * uy[index];
-					F(8) = F(6) + 0.5 * (F(2) - F(4)) + 1.0 / 6.0 * rho[index] * ux[index] - 0.5 * rho[index] * uy[index];
-				}
-				// top right corner
-				else if (row == 0 && col == width - 1) {
-					rho[index] = rho[index - 1];
-					F(3) = F(1) - 2.0 / 3.0 * rho[index] * ux[index];
-					F(4) = F(2) - 2.0 / 3.0 * rho[index] * uy[index];
-					F(7) = F(5) - 1.0 / 6.0 * rho[index] * ux[index] - 1.0 / 6.0 * rho[index] * uy[index];
-					F(8) = 0;
-					F(6) = 0;
-					F(0) = rho[index] - F(1) - F(2) - F(3) - F(4) - F(5) - F(7);
-				}
-				// bottom right corner
-				else if (row == height - 1 && col == width - 1) {
-					rho[index] = rho[index - 1];
-					F(3) = F(1) - 2.0 / 3.0 * rho[index] * ux[index];
-					F(2) = F(4) + 2.0 / 3.0 * rho[index] * uy[index];
-					F(6) = F(8) + 1.0 / 6.0 * rho[index] * uy[index] - 1.0 / 6.0 * rho[index] * ux[index];
-					F(7) = 0;
-					F(5) = 0;
-					F(0) = rho[index] - F(1) - F(2) - F(3) - F(4) - F(6) - F(8);
-				}
-				// bottom left corner
-				else if (row == height - 1 && col == 0) {
-					rho[index] = rho[index + 1];
-					F(1) = F(3) + 2.0 / 3.0 * rho[index] * ux[index];
-					F(2) = F(4) + 2.0 / 3.0 * rho[index] * uy[index];
-					F(5) = F(7) + 1.0 / 6.0 * rho[index] * ux[index] + 1.0 / 6.0 * rho[index] * uy[index];
-					F(6) = 0;
-					F(8) = 0;
-					F(0) = rho[index] - F(1) - F(2) - F(3) - F(4) - F(5) - F(7);
-				}
-				// top left corner
-				else if (row == 0 && col == 0) {
-					rho[index] = rho[index + 1];
-					F(1) = F(3) + 2.0 / 3.0 * rho[index] * ux[index];
-					F(4) = F(2) - 2.0 / 3.0 * rho[index] * uy[index];
-					F(8) = F(6) + 1.0 / 6.0 * rho[index] * ux[index] - 1.0 / 6.0 * rho[index] * uy[index];
-					F(7) = 0;
-					F(5) = 0;
-					F(0) = rho[index] - F(1) - F(2) - F(3) - F(4) - F(6) - F(8);
-				}
-
-				// update macro
-
-				rho[index] = 0;
+	for (int index = 0; index < size; ++index) {
+		if(!(obstacles[index] & IS_OBSTACLE)) {
+			// if i'm a any boundary set u to 0
+			if (obstacles[index] & (~IS_OBSTACLE)) {
 				ux[index] = 0;
 				uy[index] = 0;
-				for (int i = 0; i < 9; i++) {
-					rho[index] += F(i);
-					ux[index] += F(i) * velocitiesX[i];
-					uy[index] += F(i) * velocitiesY[i];
-				}
-				ux[index] /= rho[index];
-				uy[index] /= rho[index];
-				u_out[index] = sqrtf(ux[index] * ux[index] + uy[index] * uy[index]);
+			}
 
-				// equilibrium
-				float feq[9];
-				const float temp1 = 1.5 * (ux[index] * ux[index] + uy[index] * uy[index]);
-				for (int i = 0; i < 9; i++) {
-					const float temp2 = 3.0 * (velocitiesX[i] * ux[index] + velocitiesY[i] * uy[index]);
-					feq[i] = weights[i] * rho[index] * (1.0 + temp2 + 0.5 * temp2 * temp2 - temp1);
-				}
+			// set parabolic profile inlet
+			if (obstacles[index] & LEFT_WALL) {
+				const float halfDim = (float)(height - 1) / 2.0;
+				const float temp = (float)((index / width) / halfDim) - 1.0;
+				const float mul = 1.0 - temp * temp;
 
-				// collision for index 0
-				NEW_F(0) = (1.0 - om_p) * F(0) + om_p * feq[0];
+				ux[index] = u_in_now * mul;
+			}
 
-				// collision for other indices
-				for (int i = 1; i < 9; i++) {
-					NEW_F(i) = (1.0 - sum_param) * F(i) - sub_param * F(opposite[i]) + sum_param * feq[i] + sub_param * feq[opposite[i]];
-				}
+			// zou he
 
-				// regular bounce back
+			// top wall
+			if ((obstacles[index] & TOP_WALL) && !(obstacles[index] & (LEFT_WALL | RIGHT_WALL))) {
+				rho[index] = (F(0) + F(1) + F(3) + 2.0 * (F(2) + F(5) + F(6))) / (1.0 + uy[index]);
+				F(4) = F(2) - 2.0 / 3.0 * rho[index] * uy[index];
+				F(7) = F(5) + 0.5 * (F(1) - F(3)) - 0.5 * rho[index] * ux[index] - 1.0 / 6.0 * rho[index] * uy[index];
+				F(8) = F(6) - 0.5 * (F(1) - F(3)) + 0.5 * rho[index] * ux[index] - 1.0 / 6.0 * rho[index] * uy[index];
+			}
+			// right wall
+			else if ((obstacles[index] & RIGHT_WALL) && !(obstacles[index] & (TOP_WALL | BOTTOM_WALL))) {
+				rho[index] = 1;
+				ux[index] = F(0) + F(2) + F(4) + 2.0 * (F(1) + F(5) + F(8)) - 1.0;
+				F(3) = F(1) - 2.0 / 3.0 * ux[index];
+				F(6) = F(8) - 0.5 * (F(2) - F(4)) - 1.0 / 6.0 * ux[index];
+				F(7) = F(5) + 0.5 * (F(2) - F(4)) - 1.0 / 6.0 * ux[index];
+			}
+			// bottom wall
+			else if ((obstacles[index] & BOTTOM_WALL) && !(obstacles[index] & (LEFT_WALL | RIGHT_WALL))) {
+				rho[index] = (F(0) + F(1) + F(3) + 2.0 * (F(4) + F(7) + F(8))) / (1.0 - uy[index]);
+				F(2) = F(4) + 2.0 / 3.0 * rho[index] * uy[index];
+				F(5) = F(7) - 0.5 * (F(1) - F(3)) + 0.5 * rho[index] * ux[index] + 1.0 / 6.0 * rho[index] * uy[index];
+				F(6) = F(8) + 0.5 * (F(1) - F(3)) - 0.5 * rho[index] * ux[index] + 1.0 / 6.0 * rho[index] * uy[index];
+			}
+			// left wall
+			else if ((obstacles[index] & LEFT_WALL) && !(obstacles[index] & (TOP_WALL | BOTTOM_WALL))) {
+				rho[index] = (F(0) + F(2) + F(4) + 2.0 * (F(3) + F(7) + F(6))) / (1.0 - ux[index]);
+				F(1) = F(3) + 2.0 / 3.0 * rho[index] * ux[index];
+				F(5) = F(7) - 0.5 * (F(2) - F(4)) + 1.0 / 6.0 * rho[index] * ux[index] + 0.5 * rho[index] * uy[index];
+				F(8) = F(6) + 0.5 * (F(2) - F(4)) + 1.0 / 6.0 * rho[index] * ux[index] - 0.5 * rho[index] * uy[index];
+			}
+			// top right corner
+			else if ((obstacles[index] & TOP_WALL) && (obstacles[index] & RIGHT_WALL)) {
+				rho[index] = rho[index - 1];
+				F(3) = F(1) - 2.0 / 3.0 * rho[index] * ux[index];
+				F(4) = F(2) - 2.0 / 3.0 * rho[index] * uy[index];
+				F(7) = F(5) - 1.0 / 6.0 * rho[index] * ux[index] - 1.0 / 6.0 * rho[index] * uy[index];
+				F(8) = 0;
+				F(6) = 0;
+				F(0) = rho[index] - F(1) - F(2) - F(3) - F(4) - F(5) - F(7);
+			}
+			// bottom right corner
+			else if ((obstacles[index] & BOTTOM_WALL) && (obstacles[index] & RIGHT_WALL)) {
+				rho[index] = rho[index - 1];
+				F(3) = F(1) - 2.0 / 3.0 * rho[index] * ux[index];
+				F(2) = F(4) + 2.0 / 3.0 * rho[index] * uy[index];
+				F(6) = F(8) + 1.0 / 6.0 * rho[index] * uy[index] - 1.0 / 6.0 * rho[index] * ux[index];
+				F(7) = 0;
+				F(5) = 0;
+				F(0) = rho[index] - F(1) - F(2) - F(3) - F(4) - F(6) - F(8);
+			}
+			// bottom left corner
+			else if ((obstacles[index] & BOTTOM_WALL) && (obstacles[index] & LEFT_WALL)) {
+				rho[index] = rho[index + 1];
+				F(1) = F(3) + 2.0 / 3.0 * rho[index] * ux[index];
+				F(2) = F(4) + 2.0 / 3.0 * rho[index] * uy[index];
+				F(5) = F(7) + 1.0 / 6.0 * rho[index] * ux[index] + 1.0 / 6.0 * rho[index] * uy[index];
+				F(6) = 0;
+				F(8) = 0;
+				F(0) = rho[index] - F(1) - F(2) - F(3) - F(4) - F(5) - F(7);
+			}
+			// top left corner
+			else if ((obstacles[index] & TOP_WALL) && (obstacles[index] & LEFT_WALL)) {
+				rho[index] = rho[index + 1];
+				F(1) = F(3) + 2.0 / 3.0 * rho[index] * ux[index];
+				F(4) = F(2) - 2.0 / 3.0 * rho[index] * uy[index];
+				F(8) = F(6) + 1.0 / 6.0 * rho[index] * ux[index] - 1.0 / 6.0 * rho[index] * uy[index];
+				F(7) = 0;
+				F(5) = 0;
+				F(0) = rho[index] - F(1) - F(2) - F(3) - F(4) - F(6) - F(8);
+			}
 
-				if (boundary[index] == 1) {
-					F(3) = NEW_F(1);
-				}
-				else if (boundary[index] == -1) {
-					F(1) = NEW_F(3);
-				}
-				if (boundary[size + index] == 1) {
-					F(2) = NEW_F(4);
-				}
-				else if (boundary[size + index] == -1) {
-					F(4) = NEW_F(2);
-				}
-				if (boundary[size * 2 + index] == 1) {
-					F(6) = NEW_F(8);
-				}
-				else if (boundary[size * 2 + index] == -1) {
-					F(8) = NEW_F(6);
-				}
-				if (boundary[size * 3 + index] == 1) {
-					F(5) = NEW_F(7);
-				}
-				else if (boundary[size * 3 + index] == -1) {
-					F(7) = NEW_F(5);
-				}
+			// update macro
+
+			rho[index] = 0;
+			ux[index] = 0;
+			uy[index] = 0;
+			for (int i = 0; i < 9; i++) {
+				rho[index] += F(i);
+				ux[index] += F(i) * velocitiesX[i];
+				uy[index] += F(i) * velocitiesY[i];
+			}
+			ux[index] /= rho[index];
+			uy[index] /= rho[index];
+			u_out[index] = sqrtf(ux[index] * ux[index] + uy[index] * uy[index]);
+
+			// equilibrium
+			float feq[9];
+			const float temp1 = 1.5 * (ux[index] * ux[index] + uy[index] * uy[index]);
+			for (int i = 0; i < 9; i++) {
+				const float temp2 = 3.0 * (velocitiesX[i] * ux[index] + velocitiesY[i] * uy[index]);
+				feq[i] = weights[i] * rho[index] * (1.0 + temp2 + 0.5 * temp2 * temp2 - temp1);
+			}
+
+			// collision for index 0
+			NEW_F(0) = (1.0 - om_p) * F(0) + om_p * feq[0];
+
+			// collision for other indices
+			for (int i = 1; i < 9; i++) {
+				NEW_F(i) = (1.0 - sum_param) * F(i) - sub_param * F(opposite[i]) + sum_param * feq[i] + sub_param * feq[opposite[i]];
+			}
+
+			// regular bounce back
+
+			if (boundary[index] == 1) {
+				F(3) = NEW_F(1);
+			}
+			else if (boundary[index] == -1) {
+				F(1) = NEW_F(3);
+			}
+			if (boundary[size + index] == 1) {
+				F(2) = NEW_F(4);
+			}
+			else if (boundary[size + index] == -1) {
+				F(4) = NEW_F(2);
+			}
+			if (boundary[size * 2 + index] == 1) {
+				F(6) = NEW_F(8);
+			}
+			else if (boundary[size * 2 + index] == -1) {
+				F(8) = NEW_F(6);
+			}
+			if (boundary[size * 3 + index] == 1) {
+				F(5) = NEW_F(7);
+			}
+			else if (boundary[size * 3 + index] == -1) {
+				F(7) = NEW_F(5);
 			}
 		}
 	}
@@ -398,6 +396,23 @@ void lbm_init(FILE *in) {
 		obstacles[x + y * width] |= IS_OBSTACLE;
 	}
 	fclose(in);
+
+
+	// populate obstacles wall information
+	const int size = width * height;
+
+	for (int i = 0; i < width; ++i) {
+		// @TODO: find which way is up
+		obstacles[i]            |= TOP_WALL;
+		obstacles[size - 1 - i] |= BOTTOM_WALL;
+	}
+
+
+	for (int j = 0; j < height; ++j) {
+		// @TODO: find which way is right
+		obstacles[j * width] |= LEFT_WALL;
+		obstacles[j * width + width - 1] |= RIGHT_WALL;
+	}
 
 
 	lbm_calc_boundary(boundary, obstacles, width, height);
