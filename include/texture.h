@@ -2,18 +2,8 @@
 #define __TEXTURE_H__
 
 
-#include <GLES2/gl2.h>
-#include <EGL/egl.h>
-
-
-class Texture {
-	public:
-		Texture(int width_, int height_);
-		GLuint id;
-		unsigned char *buffer = NULL;
-		int width;
-		int height;
-};
+unsigned int texture_create(int width, int height);
+void texture_destroy(unsigned int texture_id);
 
 
 #endif

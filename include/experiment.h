@@ -5,7 +5,7 @@
 extern unsigned int program;
 
 
-void experiment_init(int width, int height);
+void experiment_init();
 void experiment_resize(int width, int height);
 void experiment_render();
 

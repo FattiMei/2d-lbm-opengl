@@ -1,5 +1,6 @@
 #include "experiment.h"
 #include "shader.h"
+#include "texture.h"
 #include "lbm.h"
 #include "glad.h"
 #include <stdlib.h>
@@ -126,7 +127,7 @@ void experiment_populate_texture() {
 
 
 // to be called after initializing lbm
-void experiment_init(int width, int height) {
+void experiment_init() {
 	program = program_load(vertex_shader_src, fragment_shader_src);
 	compute_shader_program = compute_program_load(compute_shader_src);
 
@@ -155,20 +156,7 @@ void experiment_init(int width, int height) {
 
 	texture_buffer = (unsigned char *) malloc(width * height * sizeof(unsigned char) * 3);
 
-	glGenTextures(1, &texture);
-	glBindTexture(GL_TEXTURE_2D, texture);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-	// from learnopengl.com
-	// glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
-	// glBindImageTexture(0, texture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
-
-	// glActiveTexture(GL_TEXTURE0);
-	// glBindTexture(GL_TEXTURE_2D, texture);
-
-
-	// glUseProgram(compute_shader_program);
-	// glUniform1i(compute_shader_program, glGetUniformLocation(program, "imgOutput"));
+	texture = texture_create(width, height);
 }
 
 
@@ -178,14 +166,18 @@ void experiment_resize(int width, int height) {
 
 
 void experiment_render() {
-	experiment_populate_texture();
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, texture);
+
+
+	// experiment_populate_texture();
+
+	glUseProgram(compute_shader_program);
+	glDispatchCompute(width / 10, height / 10, 1);
+	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
 	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
-
-	// glUseProgram(compute_shader_program);
-	// glDispatchCompute(width / 10, height / 10, 1);
-	// glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
 	glUseProgram(program);
 	glBindVertexArray(VAO);
