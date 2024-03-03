@@ -40,7 +40,7 @@ int main(int argc, char *argv[]) {
 			++frames_saved;
 		}
 
-		lbm_step(it);
+		lbm_step();
 	}
 
 

@@ -4,7 +4,6 @@
 #include "glad.h"
 #include <stdlib.h>
 #include <math.h>
-#include <stdbool.h>
 
 
 GLuint texture;
