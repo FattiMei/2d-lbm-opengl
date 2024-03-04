@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#define GLAD_GL_IMPLEMENTATION
 #include "glad.h"
 #include "window.h"
 #include "lbm.h"

@@ -181,19 +181,19 @@ void experiment_render() {
 	glBindTexture(GL_TEXTURE_2D, texture);
 
 
-	// experiment_populate_texture();
+	experiment_populate_texture();
 
-	float *ptr = (float *) glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, width * height * sizeof(float), GL_MAP_WRITE_BIT);
+	// float *ptr = (float *) glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, width * height * sizeof(float), GL_MAP_WRITE_BIT);
 
-	memcpy(ptr, u_out, width * height * sizeof(float));
-	glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+	// memcpy(ptr, u_out, width * height * sizeof(float));
+	// glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
 
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, u_buffer);
+	// glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, u_buffer);
 
 
-	glUseProgram(compute_shader_program);
-	glDispatchCompute(width, height, 1);
-	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+	// glUseProgram(compute_shader_program);
+	// glDispatchCompute(width, height, 1);
+	// glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
 	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
