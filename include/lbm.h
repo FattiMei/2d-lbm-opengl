@@ -9,7 +9,6 @@
 extern int width;
 extern int height;
 extern float *u_out;
-extern unsigned char *obstacles;
 extern unsigned int lbm_texture_id;
 
 

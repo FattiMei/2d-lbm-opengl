@@ -6,42 +6,36 @@
 #include <string.h>
 
 
+int width;
+int height;
+float *u_out;
+unsigned int lbm_texture_id;
+
+
 static int it = 0;
 static bool first_write = true;
+static unsigned char *lbm_texture_buffer;
 
 
-unsigned int lbm_texture_id;
-unsigned char *lbm_texture_buffer;
+static float reynolds, u_in;
+static float nu,
+	     tau,
+	     sigma,
+	     double_square_sigma,
+	     lambda_trt,
+	     tau_minus,
+	     omega_plus,
+	     omega_minus,
+	     sub_param,
+	     sum_param;
 
 
-int width,
-    height,
-    max_it;
-
-
-float reynolds,
-      u_in;
-
-
-float nu,
-      tau,
-      sigma,
-      double_square_sigma,
-      lambda_trt,
-      tau_minus,
-      omega_plus,
-      omega_minus,
-      sub_param,
-      sum_param;
-
-
-int *boundary;
-float *ux,
-      *uy,
-      *f,
-      *new_f,
-      *rho,
-      *u_out;
+static int *boundary;
+static float *ux,
+	     *uy,
+	     *f,
+	     *new_f,
+	     *rho;
 
 
 // this variable was a bool, now it has become an unsigned char (same memory footprint) and we will use the possible values to store information about obstacles and walls in a bitfield fashion
@@ -52,7 +46,7 @@ float *ux,
 #define LEFT_WALL 8
 #define RIGHT_WALL 16
 
-unsigned char *obstacles;
+static unsigned char *obstacles;
 
 
 static void lbm_reset_field(
@@ -374,8 +368,10 @@ static void lbm_substep2(
 
 // to be called only after opening an opengl context + glad setup
 void lbm_init(FILE *in) {
+	int max_it;
 	int read = fscanf(in, "%d %d\n%f %d %f\n", &width, &height, &reynolds, &max_it, &u_in);
 	(void) read;
+	(void) max_it;
 
 
 	nu = u_in * (float) (height) / reynolds * 2.0 / 3.0;
