@@ -7,7 +7,7 @@ This project started as a fork of [2d-lbm-cuda](https://github.com/AndreaTorti-0
  * heavily refactor the original implementation to decouple the computation from the rendering
  * design a coherent API
  * allow multiple lbm implementations (cpu based, compute shaders, opencl)
- * port the application to opengl 4.6
+ * port the application to opengl 4.3
  * add imgui integration
 
 
@@ -16,22 +16,18 @@ I want to make scientific software that is portable, interactive and uses modern
 
 
 ## Steps in development
- * ImGui interactivity
+ * Port the lbm computation to compute shaders
+ * ImGui interactivity (paused until compute shaders are solved)
    - start/stop the iterations
    - reload the experiment
    - count the FPS
- * make rendering on the texture a method of the lbm class
- * optimize the cpu computation
 
 
 ## Dependencies
- * opengl es 2.0 (will eventually be ported to opengl 4.6)
+ * opengl 4.3
  * glfw3 (libglfw3-dev for ubuntu and debian systems)
 
 
 ## Usage
+`make folder`
 `make run`
-
-
-## Atomic bug
-Right now there is a serious bug with the compiling and executing the application: every time I open the executable there is a chance to get a segfault and I don't know why. The next development steps will fix this issue, see you from the other side.
