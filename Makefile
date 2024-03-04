@@ -22,24 +22,12 @@ serial: build/main.o build/window.o build/experiment.o build/lbm.o build/shader.
 	$(CC) $(OPTFLAGS) $(CONFIG) -o $@ $^ $(LIBS)
 
 
-headless: build/headless.o build/lbm.o
-	$(CC) $(OPTFLAGS) $(CONFIG) -o $@ $^ -lm
-
-
 build/%.o: src/%.c
 	$(CC) -c $(INCLUDE) $(CCFLAGS) $(OPTFLAGS) $(CONFIG) -o $@ $^
 
 
-output.bin: headless
-	./headless data/input.txt $@
-
-
 run: serial
 	./serial data/input.txt output.bin
-
-
-test: headless output.bin
-	python3.8 compare.py reference.bin output.bin
 
 
 .PHONY folder:

@@ -38,7 +38,6 @@ int main(int argc, char *argv[]) {
 	}
 
 
-	lbm_init(in);
 
 
 	if (window_init("lbm on opengl", window_width, window_height) != 0) {
@@ -50,6 +49,7 @@ int main(int argc, char *argv[]) {
 	gladLoadGL(glfwGetProcAddress);
 
 
+	lbm_init(in);
 	experiment_init(window_width, window_height);
 	window_set_callbacks();
 
@@ -59,6 +59,7 @@ int main(int argc, char *argv[]) {
 			lbm_step();
 		}
 
+		lbm_write_on_texture();
 		experiment_render();
 
 		window_swap_buffers();
