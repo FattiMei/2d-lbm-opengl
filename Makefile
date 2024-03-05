@@ -10,10 +10,14 @@ objects  = $(patsubst src/%.c,build/%.o,$(sources))
 targets  = $(objects)
 
 
-all: serial
+all: serial parallel
 
 
-serial: $(targets)
+serial: build/experiment.o build/glad.o build/lbm.o build/main.o build/shader.o build/texture.o build/window.o
+	$(CC) $(OPTFLAGS) $(CONFIG) -o $@ $^ $(LIBS)
+
+
+parallel: build/experiment.o build/glad.o build/gpu.o build/main.o build/shader.o build/texture.o build/window.o
 	$(CC) $(OPTFLAGS) $(CONFIG) -o $@ $^ $(LIBS)
 
 
@@ -21,7 +25,7 @@ build/%.o: src/%.c
 	$(CC) -c $(INCLUDE) $(CCFLAGS) $(OPTFLAGS) $(CONFIG) -o $@ $^
 
 
-run: serial
+run: parallel
 	./$^ data/input.txt output.bin
 
 
@@ -32,4 +36,4 @@ folder:
 
 .PHONY clean:
 clean:
-	rm -f $(targets) serial output.bin
+	rm -f $(targets) serial parallel
