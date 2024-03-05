@@ -20,24 +20,72 @@ static unsigned char *lbm_texture_buffer;
 
 static unsigned int cs_render_program;
 static unsigned int u_buffer;
+static unsigned int obs_buffer;
 
 
 static const char* cs_render_src = R"(
 	#version 430 core
 	layout (local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
 
+
 	layout (std430, binding = 0) buffer U {
 		float u_out[];
 	};
+
+
+	layout (std430, binding = 1) buffer Ob {
+		int obstacles[];
+	};
+
+
 	layout (location = 0) writeonly uniform image2D imgOutput;
 	layout (location = 1) uniform ivec2 shape;
+
+
+	float colormap_red(float x) {
+		return 4.04377880184332E+00 * x - 5.17956989247312E+02;
+	}
+
+
+	float colormap_green(float x) {
+		if (x < (5.14022177419355E+02 + 1.13519230769231E+01) / (4.20313644688645E+00 + 4.04233870967742E+00)) {
+			return 4.20313644688645E+00 * x - 1.13519230769231E+01;
+		} else {
+			return -4.04233870967742E+00 * x + 5.14022177419355E+02;
+		}
+	}
+
+
+	float colormap_blue(float x) {
+		if (x < 1.34071303331385E+01 / (4.25125657510228E+00 - 1.0)) { // 4.12367649967
+			return x;
+		} else if (x < (255.0 + 1.34071303331385E+01) / 4.25125657510228E+00) { // 63.1359518278
+			return 4.25125657510228E+00 * x - 1.34071303331385E+01;
+		} else if (x < (1.04455240613432E+03 - 255.0) / 4.11010047593866E+00) { // 192.100512082
+			return 255.0;
+		} else {
+			return -4.11010047593866E+00 * x + 1.04455240613432E+03;
+		}
+	}
+
 
 	void main() {
 		uvec2 index = gl_GlobalInvocationID.xy;
 
-		// hack
-		vec4 color = vec4(u_out[index.y * 200 + index.x] / 0.3, 0.2, 0.7, 1.0);
-		imageStore(imgOutput, ivec2(index), color);
+		if (index.x < shape.x && index.y < shape.y) {
+			float x = 255.0 * (u_out[index.y * shape.x + index.x] / 0.3);
+			vec4 color;
+
+			if ((obstacles[index.y * shape.x + index.x] % 2) == 1) {
+				color = vec4(1.0, 1.0, 1.0, 1.0);
+			}
+			else {
+				color = vec4(colormap_red(x) / 255.0, colormap_green(x) / 255.0, colormap_blue(x) / 255.0, 1.0);
+			}
+
+
+			imageStore(imgOutput, ivec2(index), color);
+		}
 	}
 )";
 
@@ -65,13 +113,14 @@ static float *ux,
 
 // this variable was a bool, now it has become an unsigned char (same memory footprint) and we will use the possible values to store information about obstacles and walls in a bitfield fashion
 // at the moment 0 means no obstacle and 1 means obstacle
+// since we can't have byte data type in glsl we must declare obstacles as int
 #define IS_OBSTACLE 1
 #define TOP_WALL 2
 #define BOTTOM_WALL 4
 #define LEFT_WALL 8
 #define RIGHT_WALL 16
 
-static unsigned char *obstacles;
+static int *obstacles;
 
 
 static void lbm_reset_field(
@@ -81,7 +130,7 @@ static void lbm_reset_field(
 	, float uy[]
 	, const int width
 	, const int height
-	, const unsigned char obstacles[]
+	, const int obstacles[]
 ) {
 	const int size = width * height;
 	const float weights[9] = {
@@ -119,7 +168,7 @@ static void lbm_reset_field(
 // @TODO: boundary can encode the obstacle information, while being memory efficient
 static void lbm_calc_boundary(
 	  int boundary[]
-	, const unsigned char obstacles[]
+	, const int obstacles[]
 	, const int width
 	, const int height
 ) {
@@ -167,7 +216,7 @@ static void lbm_substep1(
         , float uy[]
 	, float u_out[]
 	, const int boundary[]
-	, const unsigned char obstacles[]
+	, const int obstacles[]
 ) {
 	#define F(x) f[size * x + index]
 	#define NEW_F(x) new_f[size * x + index]
@@ -192,7 +241,7 @@ static void lbm_substep1(
 
 	#pragma omp parallel for
 	for (int index = 0; index < size; ++index) {
-		const unsigned char type = obstacles[index];
+		const int type = obstacles[index];
 
 		if(!(type & IS_OBSTACLE)) {
 			// if i'm a any boundary set u to 0
@@ -351,7 +400,7 @@ static void lbm_substep2(
 		, const int height
 		, float f[]
 		, const float new_f[]
-		, const unsigned char obstacles[]
+		, const int obstacles[]
 	      ) {
 	#define F(x) f[size * x + index]
 	#define NEW_F(x) new_f[size * x + index]
@@ -411,7 +460,7 @@ void lbm_init(FILE *in) {
 	sum_param = 0.5 * (omega_plus + omega_minus);
 
 
-	obstacles = (unsigned char  *) malloc(width * height * sizeof(unsigned char));
+	obstacles = (int  *) malloc(width * height * sizeof(int));
 	ux        = (float *) malloc(width * height * sizeof(float));
 	uy        = (float *) malloc(width * height * sizeof(float));
 	u_out     = (float *) malloc(width * height * sizeof(float));
@@ -423,7 +472,7 @@ void lbm_init(FILE *in) {
 
 	// this procedure could be astracted away
 	int x, y;
-	memset(obstacles, 0, width * height * sizeof(unsigned char));
+	memset(obstacles, 0, width * height * sizeof(int));
 	while (fscanf(in, "%d %d\n", &x, &y) == 2) {
 		obstacles[x + y * width] |= IS_OBSTACLE;
 	}
@@ -459,6 +508,27 @@ void lbm_init(FILE *in) {
 	glGenBuffers(1, &u_buffer);
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, u_buffer);
 	glBufferData(GL_SHADER_STORAGE_BUFFER, width * height * sizeof(float), NULL, GL_STATIC_DRAW);
+
+	glGenBuffers(1, &obs_buffer);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, obs_buffer);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, width * height * sizeof(int), NULL, GL_STATIC_DRAW);
+
+
+	printf("prima\n");
+
+	void *ptr = glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, width * height * sizeof(int), GL_MAP_WRITE_BIT);
+
+	if (ptr == NULL) {
+		printf("got NULL pointer\n");
+	}
+	else {
+		memcpy(ptr, obstacles, width * height * sizeof(int));
+		glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+	}
+
+
+	glUseProgram(cs_render_program);
+	glUniform2i(glGetUniformLocation(cs_render_program, "shape"), width, height);
 }
 
 
@@ -489,44 +559,19 @@ void lbm_write(FILE *out) {
 }
 
 
-static float colormap_red(float x) {
-	return 4.04377880184332E+00 * x - 5.17956989247312E+02;
-}
-
-
-static float colormap_green(float x) {
-	if (x < (5.14022177419355E+02 + 1.13519230769231E+01) / (4.20313644688645E+00 + 4.04233870967742E+00)) {
-		return 4.20313644688645E+00 * x - 1.13519230769231E+01;
-	} else {
-		return -4.04233870967742E+00 * x + 5.14022177419355E+02;
-	}
-}
-
-
-static float colormap_blue(float x) {
-	if (x < 1.34071303331385E+01 / (4.25125657510228E+00 - 1.0)) { // 4.12367649967
-		return x;
-	} else if (x < (255.0 + 1.34071303331385E+01) / 4.25125657510228E+00) { // 63.1359518278
-		return 4.25125657510228E+00 * x - 1.34071303331385E+01;
-	} else if (x < (1.04455240613432E+03 - 255.0) / 4.11010047593866E+00) { // 192.100512082
-		return 255.0;
-	} else {
-		return -4.11010047593866E+00 * x + 1.04455240613432E+03;
-	}
-}
-
-
 void lbm_write_on_texture() {
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, lbm_texture_id);
 
 
-	float *ptr = (float *) glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, width * height * sizeof(float), GL_MAP_WRITE_BIT);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, u_buffer);
+	void *ptr = glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, width * height * sizeof(float), GL_MAP_WRITE_BIT);
 
 	memcpy(ptr, u_out, width * height * sizeof(float));
 	glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
 
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, u_buffer);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, obs_buffer);
 
 
 	glUseProgram(cs_render_program);
