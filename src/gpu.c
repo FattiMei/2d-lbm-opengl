@@ -20,6 +20,7 @@ static unsigned char *lbm_texture_buffer;
 
 static unsigned int cs_render_program;
 static unsigned int cs_substep1_program;
+static unsigned int cs_substep2_program;
 
 
 static unsigned int ssbo_obstacles;
@@ -483,6 +484,7 @@ void lbm_init(FILE *in) {
 
 	cs_render_program = compute_program_load_from_file("shaders/cs_render.glsl");
 	cs_substep1_program = compute_program_load_from_file("shaders/cs_substep1.glsl");
+	cs_substep2_program = compute_program_load_from_file("shaders/cs_substep2.glsl");
 
 
 	// @TODO: replicate in a programmatic way the sending of data to the gpu
@@ -594,8 +596,18 @@ void lbm_init(FILE *in) {
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 9, ssbo_boundary);
 
 
+	// passing uniforms that will be constant in all execution
 	glUseProgram(cs_render_program);
 	glUniform2i(glGetUniformLocation(cs_render_program, "shape"), width, height);
+
+	glUseProgram(cs_substep1_program);
+	glUniform2i(0, width, height);
+	glUniform1f(2, omega_plus);
+	glUniform1f(3, sum_param);
+	glUniform1f(4, sub_param);
+
+	glUseProgram(cs_substep2_program);
+	glUniform2i(0, width, height);
 }
 
 
@@ -609,7 +621,15 @@ void lbm_step() {
 	const float u_in_now = u_in * (1.0 - exp(-(it * it) / double_square_sigma));
 
 	lbm_substep1(width, height, it, u_in_now, omega_plus, sum_param, sub_param, f, new_f, rho, ux, uy, u_out, boundary, obstacles);
+	glUseProgram(cs_substep1_program);
+	glUniform1f(1, u_in_now);
+	glDispatchCompute(width * height, 1, 1);
+	glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+
 	lbm_substep2(width, height, f, new_f, obstacles);
+	glUseProgram(cs_substep2_program);
+	glDispatchCompute(width * height, 1, 1);
+	glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
 	++it;
 }
@@ -631,11 +651,11 @@ void lbm_write_on_texture() {
 	glBindTexture(GL_TEXTURE_2D, lbm_texture_id);
 
 
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_u_out);
-	void *ptr = glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, width * height * sizeof(float), GL_MAP_WRITE_BIT);
-
-	memcpy(ptr, u_out, width * height * sizeof(float));
-	glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+//	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_u_out);
+//	void *ptr = glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, width * height * sizeof(float), GL_MAP_WRITE_BIT);
+//
+//	memcpy(ptr, u_out, width * height * sizeof(float));
+//	glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
 
 
 	glUseProgram(cs_render_program);
