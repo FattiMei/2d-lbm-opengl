@@ -44,7 +44,7 @@ float colormap_blue(float x) {
 
 
 void main() {
-	uvec2 index = gl_GlobalInvocationID.xy;
+	ivec2 index = ivec2(gl_GlobalInvocationID.xy);
 
 	if (index.x < shape.x && index.y < shape.y) {
 		float x = 255.0 * (u_out[index.y * shape.x + index.x] / 0.3);
@@ -58,6 +58,6 @@ void main() {
 		}
 
 
-		imageStore(imgOutput, ivec2(index), color);
+		imageStore(imgOutput, index, color);
 	}
 }

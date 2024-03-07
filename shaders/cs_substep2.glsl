@@ -62,7 +62,7 @@ layout (location = 0) uniform ivec2 shape;
 
 void main() {
 	int index = int(gl_GlobalInvocationID.x);
-	int size = shape.x * shape.y;
+	int size = width * height;
 
 	const int velocitiesX[9] = {0, 1, 0, -1, 0, 1, -1, -1, 1};
 	const int velocitiesY[9] = {0, 0, -1, 0, 1, -1, -1, 1, 1};
@@ -74,8 +74,8 @@ void main() {
 
 			// stream for other indices
 			for (int i = 1; i < 9; i++) {
-				const int row = index / shape.x;
-				const int col = index % shape.x;
+				const int row = index / width;
+				const int col = index % width;
 
 				// obtain new indices
 				const int new_row = row + velocitiesY[i];
@@ -83,7 +83,7 @@ void main() {
 				const int new_index = new_row * width + new_col;
 
 				// stream if new index is not out of bounds or obstacle
-				if (new_row >= 0 && new_row < height && new_col >= 0 && new_col < width && (obstacles[new_index] & IS_OBSTACLE) != 0) {
+				if (new_row >= 0 && new_row < height && new_col >= 0 && new_col < width && (obstacles[new_index] & IS_OBSTACLE) == 0) {
 					f[size * i + new_index] = NEW_F(i);
 				}
 			}

@@ -445,7 +445,7 @@ void lbm_init(FILE *in) {
 
 	glGenBuffers(1, &ssbo_boundary);
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_boundary);
-	glBufferData(GL_SHADER_STORAGE_BUFFER, width * height * sizeof(int), NULL, GL_DYNAMIC_DRAW);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, 4 * width * height * sizeof(int), NULL, GL_DYNAMIC_DRAW);
 
 
 	// this procedure could be astracted away
@@ -579,21 +579,19 @@ void lbm_init(FILE *in) {
 		printf("got NULL pointer\n");
 	}
 	else {
-		memcpy(ptr, obstacles, 4 * width * height * sizeof(int));
+		memcpy(ptr, boundary, 4 * width * height * sizeof(int));
 		glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
 	}
 
 
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, ssbo_obstacles);
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, ssbo_u_out);
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, ssbo_obstacles);
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, ssbo_u_out);
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, ssbo_ux);
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, ssbo_uy);
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, ssbo_rho);
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, ssbo_f);
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 8, ssbo_new_f);
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 9, ssbo_boundary);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, ssbo_ux);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, ssbo_uy);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, ssbo_rho);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, ssbo_f);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, ssbo_new_f);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, ssbo_boundary);
 
 
 	// passing uniforms that will be constant in all execution
@@ -651,11 +649,11 @@ void lbm_write_on_texture() {
 	glBindTexture(GL_TEXTURE_2D, lbm_texture_id);
 
 
-//	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_u_out);
-//	void *ptr = glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, width * height * sizeof(float), GL_MAP_WRITE_BIT);
-//
-//	memcpy(ptr, u_out, width * height * sizeof(float));
-//	glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_u_out);
+	void *ptr = glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, width * height * sizeof(float), GL_MAP_WRITE_BIT);
+
+	memcpy(ptr, u_out, width * height * sizeof(float));
+	glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
 
 
 	glUseProgram(cs_render_program);
