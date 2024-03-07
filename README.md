@@ -15,8 +15,16 @@ This project started as a fork of [2d-lbm-cuda](https://github.com/AndreaTorti-0
 I want to make scientific software that is portable, interactive and uses modern GPUs for real time rendering of experiments.
 
 
+## Interoperability
+It is particularly difficult to port the lbm functions to compute shaders. Here is a list of problems:
+ * cumbersome declaration of buffer objects
+ * parameters of kernels have to be manually passed as uniforms
+ * kernel compilation errors are obscure
+
+
 ## Steps in development
- * Port the lbm computation to compute shaders
+ * Port the lbm computation to compute shaders (not fun)
+ * OpenGL <-> OpenCL interop (or maybe SYCL, compute shaders are awful for porting stuff)
  * ImGui interactivity (paused until compute shaders are solved)
    - start/stop the iterations
    - reload the experiment

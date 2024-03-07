@@ -4,7 +4,7 @@
 #include <stdlib.h>
 
 
-#define MAX_LOG_LENGTH 1024
+#define MAX_LOG_LENGTH 100000
 static char log[MAX_LOG_LENGTH];
 
 
@@ -68,6 +68,9 @@ GLint shader_load(
 
 			fprintf(stderr, "%s\n", log);
 			glDeleteShader(shader);
+		}
+		else {
+			fprintf(stderr, "Log was too big (%d bytes)\n", info_len);
 		}
 	}
 
