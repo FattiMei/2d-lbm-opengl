@@ -8,6 +8,36 @@
 static char log[MAX_LOG_LENGTH];
 
 
+char *load_cstring_from_file(const char *filename) {
+	char *result = NULL;
+	FILE *fp = fopen(filename, "r");
+
+	if (fp == NULL) {
+		fprintf(stderr, "Error when opening file %s\n", filename);
+		return NULL;
+	}
+
+	fseek(fp, 0L, SEEK_END);
+	size_t numbytes = ftell(fp);
+	fseek(fp, 0L, SEEK_SET);
+
+	result = (char *) malloc(numbytes + 1);
+	if (result == NULL) {
+		fprintf(stderr, "[ERROR]: failed allocation of %ld bytes\n", numbytes);
+	}
+	else {
+		if (fread(result, sizeof(char), numbytes, fp) != numbytes) {
+			fprintf(stderr, "[ERROR]: failed read of %ld bytes\n", numbytes);
+		}
+
+		result[numbytes] = '\0';
+	}
+
+	fclose(fp);
+	return result;
+}
+
+
 GLint shader_load(
 	  GLenum type
 	, const GLchar* string
@@ -158,6 +188,15 @@ GLint compute_program_load(const GLchar *compute_shader_src) {
 	}
 
 	// @TODO: delete the shaders
+
+	return program;
+}
+
+
+GLint compute_program_load_from_file(const char *filename) {
+	char *program_src = load_cstring_from_file(filename);
+	GLint program = compute_program_load(program_src);
+	free(program_src);
 
 	return program;
 }
