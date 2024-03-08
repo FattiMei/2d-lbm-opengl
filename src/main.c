@@ -3,7 +3,7 @@
 #include "glad.h"
 #include "window.h"
 #include "lbm.h"
-#include "experiment.h"
+#include "render.h"
 
 
 bool paused = false;
@@ -14,30 +14,19 @@ int main(int argc, char *argv[]) {
 	int window_height = 600;
 
 
-	if (argc != 3) {
-		fprintf(stderr, "Invalid command line arguments\n");
-		fprintf(stderr, "Usage: ./headless <input filename> <binary output filename>\n");
+	if (argc == 1) {
+		fprintf(stderr, "Need an input file as command-line argument\n");
 		exit(EXIT_FAILURE);
 	}
 
 
 	FILE *in  = fopen(argv[1], "r");
-	FILE *out = fopen(argv[2], "w");
 
 
 	if (in == NULL) {
 		fprintf(stderr, "Could not open input file %s\n", argv[1]);
 		exit(EXIT_FAILURE);
 	}
-
-
-	if (out == NULL) {
-		fprintf(stderr, "Could not open output file %s\n", argv[2]);
-		fclose(in);
-		exit(EXIT_FAILURE);
-	}
-
-
 
 
 	if (window_init("lbm on opengl", window_width, window_height) != 0) {
@@ -50,7 +39,7 @@ int main(int argc, char *argv[]) {
 
 
 	lbm_init(in);
-	experiment_init(window_width, window_height);
+	render_init(window_width, window_height);
 	window_set_callbacks();
 
 
@@ -60,7 +49,7 @@ int main(int argc, char *argv[]) {
 		}
 
 		lbm_write_on_texture();
-		experiment_render();
+		render_render();
 
 		window_swap_buffers();
 		window_poll_events();

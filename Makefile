@@ -13,11 +13,11 @@ targets  = $(objects)
 all: serial parallel
 
 
-serial: build/experiment.o build/glad.o build/lbm.o build/main.o build/shader.o build/texture.o build/window.o
+serial: build/render.o build/glad.o build/lbm.o build/main.o build/shader.o build/texture.o build/window.o
 	$(CC) $(OPTFLAGS) $(CONFIG) -o $@ $^ $(LIBS)
 
 
-parallel: build/experiment.o build/glad.o build/gpu.o build/main.o build/shader.o build/texture.o build/window.o
+parallel: build/render.o build/glad.o build/gpu.o build/main.o build/shader.o build/texture.o build/window.o
 	$(CC) $(OPTFLAGS) $(CONFIG) -o $@ $^ $(LIBS)
 
 

@@ -1,7 +1,7 @@
 #include "window.h"
 #include <GLFW/glfw3.h>
 #include <stdio.h>
-#include "experiment.h"
+#include "render.h"
 #include "lbm.h"
 
 
@@ -95,7 +95,7 @@ static void mouse_button_callback(GLFWwindow *window, int button, int action, in
 
 
 static void resize_callback(GLFWwindow *window, int width, int height) {
-	experiment_resize(width, height);
+	render_resize(width, height);
 }
 
 

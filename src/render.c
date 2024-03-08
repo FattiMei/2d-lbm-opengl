@@ -1,4 +1,4 @@
-#include "experiment.h"
+#include "render.h"
 #include "shader.h"
 #include "texture.h"
 #include "lbm.h"
@@ -56,7 +56,7 @@ const char* fragment_shader_src = R"(
 
 
 // to be called after initializing lbm
-void experiment_init() {
+void render_init() {
 	program = program_load(vertex_shader_src, fragment_shader_src);
 
 
@@ -83,12 +83,12 @@ void experiment_init() {
 }
 
 
-void experiment_resize(int width, int height) {
+void render_resize(int width, int height) {
 	glViewport(0, 0, width, height);
 }
 
 
-void experiment_render() {
+void render_render() {
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, lbm_texture_id);
 
