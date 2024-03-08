@@ -2,6 +2,7 @@
 #include "texture.h"
 #include "glad.h"
 #include <stdlib.h>
+#include <stdbool.h>
 #include <math.h>
 #include <string.h>
 
