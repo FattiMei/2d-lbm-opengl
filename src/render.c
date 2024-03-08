@@ -9,23 +9,7 @@
 
 
 static unsigned int render_program;
-
-
-static const float vertices[] = {
-	 1.0f,  1.0f, 1.0f, 1.0f,
-	 1.0f, -1.0f, 1.0f, 0.0f,
-	-1.0f, -1.0f, 0.0f, 0.0f,
-	-1.0f,  1.0f, 0.0f, 1.0f
-};
-
-
-static unsigned int indices[] = {
-	0, 1, 3,
-	1, 2, 3
-};
-
-
-unsigned int VAO, VBO, EBO;
+static unsigned int VAO;
 
 
 static const char* vertex_shader_src = R"(
@@ -36,8 +20,12 @@ static const char* vertex_shader_src = R"(
 	out vec2 texCoord;
 
 	void main() {
-		gl_Position = vec4(aPos, 0.0, 1.0);
-		texCoord = aTexCoord;
+		vec2 uv;
+		uv.x = (gl_VertexID & 1);
+		uv.y = ((gl_VertexID >> 1) & 1);
+
+		gl_Position = vec4(uv * 2.0 - 1.0, 0.0, 1.0);
+		texCoord = uv;
 	}
 )";
 
@@ -59,28 +47,8 @@ static const char* fragment_shader_src = R"(
 void render_init() {
 	render_program = program_load(vertex_shader_src, fragment_shader_src);
 
-
-	// @TODO: simplify this solution, I know that we could make it all in the vertex shader
 	glGenVertexArrays(1, &VAO);
-	glGenBuffers(1, &VBO);
-	glGenBuffers(1, &EBO);
-
 	glBindVertexArray(VAO);
-
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
-
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
-	glEnableVertexAttribArray(1);
-
-	glBindBuffer(GL_ARRAY_BUFFER, 0); 
-	glBindVertexArray(0); 
 }
 
 
@@ -94,6 +62,5 @@ void render_present() {
 	glBindTexture(GL_TEXTURE_2D, lbm_texture_id);
 
 	glUseProgram(render_program);
-	glBindVertexArray(VAO);
-	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 }
