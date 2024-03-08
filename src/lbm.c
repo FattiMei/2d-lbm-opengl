@@ -131,7 +131,6 @@ static void lbm_calc_boundary(
 static void lbm_substep1(
 	  const int width
 	, const int height
-	, const int it
 	, const float u_in_now
 	, const float om_p
         , const float sum_param
@@ -439,7 +438,7 @@ void lbm_reload() {
 void lbm_step() {
 	const float u_in_now = u_in * (1.0 - exp(-(it * it) / double_square_sigma));
 
-	lbm_substep1(width, height, it, u_in_now, omega_plus, sum_param, sub_param, f, new_f, rho, ux, uy, u_out, boundary, obstacles);
+	lbm_substep1(width, height, u_in_now, omega_plus, sum_param, sub_param, f, new_f, rho, ux, uy, u_out, boundary, obstacles);
 	lbm_substep2(width, height, f, new_f, obstacles);
 
 	++it;

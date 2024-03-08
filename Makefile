@@ -1,5 +1,5 @@
 CC       = gcc
-CCFLAGS  = -Wall
+CCFLAGS  = -Wall -Wextra -Wpedantic
 OPTFLAGS = -O2 -fopenmp
 INCLUDE  = -I ./include
 LIBS     = -lm -lglfw -lGL

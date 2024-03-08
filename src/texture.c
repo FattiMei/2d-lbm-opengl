@@ -21,6 +21,5 @@ unsigned int texture_create(int width, int height) {
 }
 
 
-void texture_destroy(unsigned int texture_id) {
-	// @TODO: fill
-}
+// @TODO: fill
+void texture_destroy(unsigned int texture_id);
