@@ -29,11 +29,6 @@ run: parallel
 	./$^ data/input.txt output.bin
 
 
-.PHONY folder:
-folder:
-	mkdir -p build
-
-
 .PHONY clean:
 clean:
 	rm -f $(targets) serial parallel
