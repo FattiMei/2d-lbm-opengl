@@ -6,12 +6,15 @@
 #include "render.h"
 
 
+#define DEFAULT_WINDOW_WIDTH  800
+#define DEFAULT_WINDOW_HEIGHT 600
+
+
 bool paused = false;
 
 
 int main(int argc, char *argv[]) {
-	int window_width = 800;
-	int window_height = 600;
+	FILE *in = NULL;
 
 
 	if (argc == 1) {
@@ -20,16 +23,13 @@ int main(int argc, char *argv[]) {
 	}
 
 
-	FILE *in  = fopen(argv[1], "r");
-
-
-	if (in == NULL) {
+	if ((in = fopen(argv[1], "r")) == NULL) {
 		fprintf(stderr, "Could not open input file %s\n", argv[1]);
 		exit(EXIT_FAILURE);
 	}
 
 
-	if (window_init("lbm on opengl", window_width, window_height) != 0) {
+	if (window_init("lbm on opengl", DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT) != 0) {
 		window_close();
 		exit(EXIT_FAILURE);
 	}
@@ -39,7 +39,7 @@ int main(int argc, char *argv[]) {
 
 
 	lbm_init(in);
-	render_init(window_width, window_height);
+	render_init();
 	window_set_callbacks();
 
 
@@ -49,7 +49,7 @@ int main(int argc, char *argv[]) {
 		}
 
 		lbm_write_on_texture();
-		render_render();
+		render_present();
 
 		window_swap_buffers();
 		window_poll_events();

@@ -8,7 +8,7 @@
 #include <string.h>
 
 
-unsigned int program;
+static unsigned int render_program;
 
 
 static const float vertices[] = {
@@ -28,7 +28,7 @@ static unsigned int indices[] = {
 unsigned int VAO, VBO, EBO;
 
 
-const char* vertex_shader_src = R"(
+static const char* vertex_shader_src = R"(
 	#version 430 core
 	layout (location = 0) in vec2 aPos;
 	layout (location = 1) in vec2 aTexCoord;
@@ -42,7 +42,7 @@ const char* vertex_shader_src = R"(
 )";
 
 
-const char* fragment_shader_src = R"(
+static const char* fragment_shader_src = R"(
 	#version 430 core
 	in vec2 texCoord;
 	out vec4 FragColor;
@@ -57,9 +57,10 @@ const char* fragment_shader_src = R"(
 
 // to be called after initializing lbm
 void render_init() {
-	program = program_load(vertex_shader_src, fragment_shader_src);
+	render_program = program_load(vertex_shader_src, fragment_shader_src);
 
 
+	// @TODO: simplify this solution, I know that we could make it all in the vertex shader
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);
 	glGenBuffers(1, &EBO);
@@ -88,14 +89,11 @@ void render_resize(int width, int height) {
 }
 
 
-void render_render() {
+void render_present() {
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, lbm_texture_id);
 
-	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT);
-
-	glUseProgram(program);
+	glUseProgram(render_program);
 	glBindVertexArray(VAO);
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 }

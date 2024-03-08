@@ -24,10 +24,11 @@ It is particularly difficult to port the lbm functions to compute shaders. Here 
 
 ## Steps in development
  * Port the lbm computation to compute shaders (not fun)
- * OpenGL <-> OpenCL interop (or maybe SYCL, compute shaders are awful for porting stuff)
+ * OpenGL <-> OpenCL interop (no thank you)
+ * Experiment with different work group size to maximize performance
  * ImGui interactivity (paused until compute shaders are solved)
-   - start/stop the iterations
-   - reload the experiment
+   - start/stop the iterations (already implemented)
+   - reload the experiment (yes)
    - count the FPS
 
 
@@ -37,5 +38,4 @@ It is particularly difficult to port the lbm functions to compute shaders. Here 
 
 
 ## Usage
-`make folder`
-`make run`
+Out of the box: `make run`

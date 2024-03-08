@@ -7,7 +7,7 @@ extern unsigned int program;
 
 void render_init();
 void render_resize(int width, int height);
-void render_render();
+void render_present();
 
 
 #endif
