@@ -38,13 +38,9 @@ char *load_cstring_from_file(const char *filename) {
 }
 
 
-GLint shader_load(
-	  GLenum type
-	, const GLchar* string
-	, const GLint *length
-) {
+int shader_load(GLenum type, const GLchar* string, const int *length) {
 	GLuint shader = glCreateShader(type);
-	GLint compiled;
+	int compiled;
 
 	if (shader == 0) {
 		fprintf(stderr, "Could not create shader\n");
@@ -60,7 +56,7 @@ GLint shader_load(
 	if (!compiled) {
 		fprintf(stderr, "Compile error:\n");
 
-		GLint info_len = 0;
+		int info_len = 0;
 		glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &info_len);
 
 		if (info_len < MAX_LOG_LENGTH) {
@@ -78,53 +74,21 @@ GLint shader_load(
 }
 
 
-GLint shader_load_from_file(GLenum type, const char *filename) {
-	GLuint shader;
-	FILE *fp = fopen(filename, "r");
+int shader_load_from_file(GLenum type, const char *filename) {
+	char *shader_src = load_cstring_from_file(filename);
+	int shader = shader_load(type, shader_src, NULL);
 
-	fprintf(stderr, "[DEBUG]: opening file %s\n", filename);
-
-	if (fp == NULL) {
-		fprintf(stderr, "Error when opening file %s\n", filename);
-		return -1;
-	}
-
-	{
-		GLint numbytes = 0;
-		char *buffer = NULL;
-
-		// hack for finding the dimension of a file
-		fseek(fp, 0L, SEEK_END);
-		numbytes = ftell(fp);
-		fseek(fp, 0L, SEEK_SET);
-
-		fprintf(stderr, "[DEBUG]: file is %d bytes long\n", numbytes);
-
-		buffer = (char *) malloc(numbytes + 1);
-		if (buffer == NULL) {
-			fprintf(stderr, "[ERROR]: failed allocation of %d bytes\n", numbytes);
-			return -1;
-		}
-
-		int unused = fread(buffer, sizeof(char), numbytes, fp);
-		(void) unused;
-		buffer[numbytes] = '\0';
-
-		shader = shader_load(type, buffer, NULL);
-
-		free(buffer);
-		fclose(fp);
-	}
+	free(shader_src);
 
 	return shader;
 }
 
 
-GLint program_load(const GLchar *vertex_shader_src, const GLchar *fragment_shader_src) {
-	GLint vertex_shader   = shader_load(GL_VERTEX_SHADER  , vertex_shader_src  , NULL);
-	GLint fragment_shader = shader_load(GL_FRAGMENT_SHADER, fragment_shader_src, NULL);
-	GLint program = glCreateProgram();
-	GLint linked;
+int program_load(const GLchar *vertex_shader_src, const GLchar *fragment_shader_src) {
+	int vertex_shader   = shader_load(GL_VERTEX_SHADER  , vertex_shader_src  , NULL);
+	int fragment_shader = shader_load(GL_FRAGMENT_SHADER, fragment_shader_src, NULL);
+	int program = glCreateProgram();
+	int linked;
 
 	if (program == 0) {
 		fprintf(stderr, "Error in creating program\n");
@@ -140,7 +104,7 @@ GLint program_load(const GLchar *vertex_shader_src, const GLchar *fragment_shade
 	if (!linked) {
 		fprintf(stderr, "Linker error:\n");
 
-		GLint info_len = 0;
+		int info_len = 0;
 		glGetProgramiv(program, GL_INFO_LOG_LENGTH, &info_len);
 
 		if (info_len < MAX_LOG_LENGTH) {
@@ -159,10 +123,22 @@ GLint program_load(const GLchar *vertex_shader_src, const GLchar *fragment_shade
 }
 
 
-GLint compute_program_load(const GLchar *compute_shader_src) {
-	GLint compute_shader = shader_load(GL_COMPUTE_SHADER, compute_shader_src, NULL);
-	GLint program = glCreateProgram();
-	GLint linked;
+int program_load_from_file(const char *vs_filename, const char *fs_filename) {
+	char *vertex_shader_src   = load_cstring_from_file(vs_filename);
+	char *fragment_shader_src = load_cstring_from_file(fs_filename);
+	int program = program_load(vertex_shader_src, fragment_shader_src);
+
+	free(vertex_shader_src);
+	free(fragment_shader_src);
+
+	return program;
+}
+
+
+int compute_program_load(const GLchar *compute_shader_src) {
+	int compute_shader = shader_load(GL_COMPUTE_SHADER, compute_shader_src, NULL);
+	int program = glCreateProgram();
+	int linked;
 
 	if (program == 0) {
 		fprintf(stderr, "Error in creating program\n");
@@ -177,7 +153,7 @@ GLint compute_program_load(const GLchar *compute_shader_src) {
 	if (!linked) {
 		fprintf(stderr, "Linker error:\n");
 
-		GLint info_len = 0;
+		int info_len = 0;
 		glGetProgramiv(program, GL_INFO_LOG_LENGTH, &info_len);
 
 		if (info_len < MAX_LOG_LENGTH) {
@@ -196,9 +172,9 @@ GLint compute_program_load(const GLchar *compute_shader_src) {
 }
 
 
-GLint compute_program_load_from_file(const char *filename) {
+int compute_program_load_from_file(const char *filename) {
 	char *program_src = load_cstring_from_file(filename);
-	GLint program = compute_program_load(program_src);
+	int program = compute_program_load(program_src);
 	free(program_src);
 
 	return program;
