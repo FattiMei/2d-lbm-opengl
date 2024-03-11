@@ -75,8 +75,7 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 	}
 	else if (key == GLFW_KEY_R && action == GLFW_PRESS) {
 		lbm_reload();
-
-		// @TODO: reload should render the initial state
+		lbm_write_on_texture();
 	}
 }
 

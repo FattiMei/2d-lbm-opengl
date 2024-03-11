@@ -46,9 +46,9 @@ int main(int argc, char *argv[]) {
 	while (!window_should_close()) {
 		if (!paused) {
 			lbm_step();
+			lbm_write_on_texture();
 		}
 
-		lbm_write_on_texture();
 		render_present();
 
 		window_swap_buffers();

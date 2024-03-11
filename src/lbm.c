@@ -53,6 +53,7 @@ static unsigned int *obstacles;
 static void lbm_reset_field(
 	  float f[]
 	, float rho[]
+	, float u_out[]
 	, float ux[]
 	, float uy[]
 	, const int width
@@ -74,6 +75,7 @@ static void lbm_reset_field(
 
 
 	for (int index = 0; index < size; ++index) {
+		u_out[index] = 0.0f;
 
 		if (obstacles[index] & IS_OBSTACLE) {
 			ux[index] = NAN;
@@ -421,7 +423,7 @@ void lbm_init(FILE *in) {
 
 
 	lbm_calc_boundary(boundary, obstacles, width, height);
-	lbm_reset_field(f, rho, ux, uy, width, height, obstacles);
+	lbm_reset_field(f, rho, u_out, ux, uy, width, height, obstacles);
 
 
 	lbm_texture_id = texture_create(width, height);
@@ -430,7 +432,7 @@ void lbm_init(FILE *in) {
 
 
 void lbm_reload() {
-	lbm_reset_field(f, rho, ux, uy, width, height, obstacles);
+	lbm_reset_field(f, rho, u_out, ux, uy, width, height, obstacles);
 	it = 0;
 }
 
