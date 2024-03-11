@@ -55,7 +55,7 @@ int main(int argc, char *argv[]) {
 		window_poll_events();
 	}
 
-	window_close();
 	lbm_close();
+	window_close();
 	return 0;
 }

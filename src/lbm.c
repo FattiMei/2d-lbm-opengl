@@ -9,7 +9,6 @@
 
 int width;
 int height;
-float *u_out;
 unsigned int lbm_texture_id;
 
 
@@ -32,25 +31,25 @@ static float nu,
 
 
 static int *boundary;
-static float *ux,
+static float *u_out,
+	     *ux,
 	     *uy,
 	     *f,
 	     *new_f,
 	     *rho;
 
 
-// this variable was a bool, now it has become an unsigned int (same memory footprint) and we will use the possible values to store information about obstacles and walls in a bitfield fashion
-// at the moment 0 means no obstacle and 1 means obstacle
+// this variable was a bool, now it has become an unsigned char (same memory footprint) and we will use the possible values to store information about obstacles and walls in a bitfield
 #define IS_OBSTACLE 1
 #define TOP_WALL 2
 #define BOTTOM_WALL 4
 #define LEFT_WALL 8
 #define RIGHT_WALL 16
 
-static unsigned int *obstacles;
+static unsigned char *obstacles;
 
 
-static void lbm_reset_field(float f[], float rho[], float u_out[], float ux[], float uy[], const int width, const int height, const unsigned int obstacles[]) {
+static void lbm_reset_field(float f[], float rho[], float u_out[], float ux[], float uy[], const int width, const int height, const unsigned char obstacles[]) {
 	const int size = width * height;
 	const float weights[9] = {
 		4.0 /  9.0,
@@ -86,7 +85,7 @@ static void lbm_reset_field(float f[], float rho[], float u_out[], float ux[], f
 
 
 // @TODO: boundary can encode the obstacle information, while being memory efficient, not sure if that's the case, look at shape
-static void lbm_calc_boundary(int boundary[], const unsigned int obstacles[], const int width, const int height) {
+static void lbm_calc_boundary(int boundary[], const unsigned char obstacles[], const int width, const int height) {
 	const int dirs[4][2] = {{1, 0}, {0, 1}, {1, 1}, {-1, 1}};
 	const int size = width * height;
 
@@ -130,7 +129,7 @@ static void lbm_substep1(
 		float uy[],
 		float u_out[],
 		const int boundary[],
-		const unsigned int obstacles[]) {
+		const unsigned char obstacles[]) {
 
 #define F(x) f[size * x + index]
 #define NEW_F(x) new_f[size * x + index]
@@ -314,7 +313,7 @@ static void lbm_substep2(
 		const int height,
 		float f[],
 		const float new_f[],
-		const unsigned int obstacles[]) {
+		const unsigned char obstacles[]) {
 
 
 #define F(x) f[size * x + index]
@@ -367,16 +366,16 @@ void lbm_allocate_resources() {
 
 
 void lbm_release_resources() {
-	// free(obstacles);
-	// free(ux);
-	// free(uy);
-	// free(u_out);
-	// free(rho);
-	// free(f);
-	// free(new_f);
-	// free(boundary);
-	// free(lbm_texture_buffer);
-	// texture_destroy(lbm_texture_id);
+	free(obstacles);
+	free(ux);
+	free(uy);
+	free(u_out);
+	free(rho);
+	free(f);
+	free(new_f);
+	free(boundary);
+	free(lbm_texture_buffer);
+	texture_destroy(lbm_texture_id);
 }
 
 
@@ -405,7 +404,7 @@ void lbm_init(FILE *in) {
 
 	// this procedure could be astracted away
 	int x, y;
-	memset(obstacles, 0, width * height * sizeof(unsigned int));
+	memset(obstacles, 0, width * height * sizeof(*obstacles));
 	while (fscanf(in, "%d %d\n", &x, &y) == 2) {
 		obstacles[x + y * width] |= IS_OBSTACLE;
 	}
