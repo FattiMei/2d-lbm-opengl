@@ -354,7 +354,7 @@ static void lbm_substep2(
 }
 
 
-void lbm_allocate_buffers() {
+void lbm_allocate_resources() {
 	obstacles = malloc(    width * height * sizeof(*obstacles));
 	ux        = malloc(    width * height * sizeof(*ux));
 	uy        = malloc(    width * height * sizeof(*uy));
@@ -366,15 +366,17 @@ void lbm_allocate_buffers() {
 }
 
 
-void lbm_release_buffers() {
-	free(obstacles);
-	free(ux);
-	free(uy);
-	free(u_out);
-	free(rho);
-	free(f);
-	free(new_f);
-	free(boundary);
+void lbm_release_resources() {
+	// free(obstacles);
+	// free(ux);
+	// free(uy);
+	// free(u_out);
+	// free(rho);
+	// free(f);
+	// free(new_f);
+	// free(boundary);
+	// free(lbm_texture_buffer);
+	// texture_destroy(lbm_texture_id);
 }
 
 
@@ -398,7 +400,7 @@ void lbm_init(FILE *in) {
 	sum_param = 0.5 * (omega_plus + omega_minus);
 
 
-	lbm_allocate_buffers();
+	lbm_allocate_resources();
 
 
 	// this procedure could be astracted away
@@ -436,12 +438,6 @@ void lbm_init(FILE *in) {
 }
 
 
-void lbm_reload() {
-	lbm_reset_field(f, rho, u_out, ux, uy, width, height, obstacles);
-	it = 0;
-}
-
-
 void lbm_step() {
 	const float u_in_now = u_in * (1.0 - exp(-(it * it) / double_square_sigma));
 
@@ -452,14 +448,9 @@ void lbm_step() {
 }
 
 
-void lbm_write(FILE *out) {
-	if (first_write) {
-		fprintf(out, "%d %d\n", width, height);
-		first_write = false;
-	}
-
-	fprintf(out, "%d\n", it);
-	fwrite(u_out, sizeof(float), width * height, out);
+void lbm_reload() {
+	lbm_reset_field(f, rho, u_out, ux, uy, width, height, obstacles);
+	it = 0;
 }
 
 
@@ -517,8 +508,17 @@ void lbm_write_on_texture() {
 }
 
 
+void lbm_write_on_file(FILE *out) {
+	if (first_write) {
+		fprintf(out, "%d %d\n", width, height);
+		first_write = false;
+	}
+
+	fprintf(out, "%d\n", it);
+	fwrite(u_out, sizeof(float), width * height, out);
+}
+
+
 void lbm_close() {
-	free(lbm_texture_buffer);
-	lbm_release_buffers();
-	texture_destroy(lbm_texture_id);
+	lbm_release_resources();
 }
