@@ -412,3 +412,9 @@ void lbm_write_on_texture() {
 	glDispatchCompute(width, height, 1);
 	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 }
+
+
+// @TODO: fill
+void lbm_close() {
+
+}

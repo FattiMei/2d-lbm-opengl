@@ -326,6 +326,7 @@ static void lbm_substep2(
 	const int velocitiesY[9] = {0, 0, -1, 0, 1, -1, -1, 1, 1};
 
 
+#pragma omp parallel for
 	for (int index = 0; index < size; ++index) {
 		if (!(obstacles[index] & IS_OBSTACLE)) {
 			// stream for index 0
@@ -353,6 +354,30 @@ static void lbm_substep2(
 }
 
 
+void lbm_allocate_buffers() {
+	obstacles = malloc(    width * height * sizeof(*obstacles));
+	ux        = malloc(    width * height * sizeof(*ux));
+	uy        = malloc(    width * height * sizeof(*uy));
+	u_out     = malloc(    width * height * sizeof(*u_out));
+	rho       = malloc(    width * height * sizeof(*rho));
+	f         = malloc(9 * width * height * sizeof(*f));
+	new_f     = malloc(9 * width * height * sizeof(*new_f));
+	boundary  = malloc(4 * width * height * sizeof(*boundary));
+}
+
+
+void lbm_release_buffers() {
+	free(obstacles);
+	free(ux);
+	free(uy);
+	free(u_out);
+	free(rho);
+	free(f);
+	free(new_f);
+	free(boundary);
+}
+
+
 // to be called only after opening an opengl context + glad setup
 void lbm_init(FILE *in) {
 	int max_it;
@@ -373,14 +398,7 @@ void lbm_init(FILE *in) {
 	sum_param = 0.5 * (omega_plus + omega_minus);
 
 
-	obstacles = (unsigned int *) malloc(width * height * sizeof(unsigned int));
-	ux        = (float *) malloc(width * height * sizeof(float));
-	uy        = (float *) malloc(width * height * sizeof(float));
-	u_out     = (float *) malloc(width * height * sizeof(float));
-	rho       = (float *) malloc(width * height * sizeof(float));
-	f         = (float *) malloc(9 * width * height * sizeof(float));
-	new_f     = (float *) malloc(9 * width * height * sizeof(float));
-	boundary  = (int   *) malloc(4 * width * height * sizeof(int));
+	lbm_allocate_buffers();
 
 
 	// this procedure could be astracted away
@@ -496,4 +514,11 @@ void lbm_write_on_texture() {
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, lbm_texture_buffer);
 	glGenerateMipmap(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, lbm_texture_id);
+}
+
+
+void lbm_close() {
+	free(lbm_texture_buffer);
+	lbm_release_buffers();
+	texture_destroy(lbm_texture_id);
 }

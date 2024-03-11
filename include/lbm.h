@@ -16,6 +16,7 @@ void lbm_step();
 void lbm_reload();
 void lbm_write(FILE *out);
 void lbm_write_on_texture();
+void lbm_close();
 
 
 #endif

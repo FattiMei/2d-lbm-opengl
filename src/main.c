@@ -56,5 +56,6 @@ int main(int argc, char *argv[]) {
 	}
 
 	window_close();
+	lbm_close();
 	return 0;
 }

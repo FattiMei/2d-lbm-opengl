@@ -21,5 +21,6 @@ unsigned int texture_create(int width, int height) {
 }
 
 
-// @TODO: fill
-void texture_destroy(unsigned int texture_id);
+void texture_destroy(unsigned int texture_id) {
+	glDeleteTextures(1, &texture_id);
+}
