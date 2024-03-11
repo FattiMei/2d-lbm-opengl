@@ -50,27 +50,18 @@ static float *ux,
 static unsigned int *obstacles;
 
 
-static void lbm_reset_field(
-	  float f[]
-	, float rho[]
-	, float u_out[]
-	, float ux[]
-	, float uy[]
-	, const int width
-	, const int height
-	, const unsigned int obstacles[]
-) {
+static void lbm_reset_field(float f[], float rho[], float u_out[], float ux[], float uy[], const int width, const int height, const unsigned int obstacles[]) {
 	const int size = width * height;
 	const float weights[9] = {
-		  4.0 / 9.0
-		, 1.0 / 9.0
-		, 1.0 / 9.0
-		, 1.0 / 9.0
-		, 1.0 / 9.0
-		, 1.0 / 36.0
-		, 1.0 / 36.0
-		, 1.0 / 36.0
-		, 1.0 / 36.0
+		4.0 /  9.0,
+		1.0 /  9.0,
+		1.0 /  9.0,
+		1.0 /  9.0,
+		1.0 /  9.0,
+		1.0 / 36.0,
+		1.0 / 36.0,
+		1.0 / 36.0,
+		1.0 / 36.0
 	};
 
 
@@ -94,13 +85,8 @@ static void lbm_reset_field(
 }
 
 
-// @TODO: boundary can encode the obstacle information, while being memory efficient
-static void lbm_calc_boundary(
-	  int boundary[]
-	, const unsigned int obstacles[]
-	, const int width
-	, const int height
-) {
+// @TODO: boundary can encode the obstacle information, while being memory efficient, not sure if that's the case, look at shape
+static void lbm_calc_boundary(int boundary[], const unsigned int obstacles[], const int width, const int height) {
 	const int dirs[4][2] = {{1, 0}, {0, 1}, {1, 1}, {-1, 1}};
 	const int size = width * height;
 
@@ -131,23 +117,23 @@ static void lbm_calc_boundary(
 
 
 static void lbm_substep1(
-	  const int width
-	, const int height
-	, const float u_in_now
-	, const float om_p
-        , const float sum_param
-	, const float sub_param
-	, float f[]
-	, float new_f[]
-	, float rho[]
-	, float ux[]
-        , float uy[]
-	, float u_out[]
-	, const int boundary[]
-	, const unsigned int obstacles[]
-) {
-	#define F(x) f[size * x + index]
-	#define NEW_F(x) new_f[size * x + index]
+		const int width,
+		const int height,
+		const float u_in_now,
+		const float om_p,
+		const float sum_param,
+		const float sub_param,
+		float f[],
+		float new_f[],
+		float rho[],
+		float ux[],
+		float uy[],
+		float u_out[],
+		const int boundary[],
+		const unsigned int obstacles[]) {
+
+#define F(x) f[size * x + index]
+#define NEW_F(x) new_f[size * x + index]
 
 
 	const int size = width * height;
@@ -155,19 +141,19 @@ static void lbm_substep1(
 	const int velocitiesY[9] = {0, 0, -1, 0, 1, -1, -1, 1, 1};
 	const int opposite[9]    = {0, 3, 4, 1, 2, 7, 8, 5, 6};
 	const float weights[9] = {
-		  4.0 / 9.0
-		, 1.0 / 9.0
-		, 1.0 / 9.0
-		, 1.0 / 9.0
-		, 1.0 / 9.0
-		, 1.0 / 36.0
-		, 1.0 / 36.0
-		, 1.0 / 36.0
-		, 1.0 / 36.0
+		4.0 /  9.0,
+		1.0 /  9.0,
+		1.0 /  9.0,
+		1.0 /  9.0,
+		1.0 /  9.0,
+		1.0 / 36.0,
+		1.0 / 36.0,
+		1.0 / 36.0,
+		1.0 / 36.0
 	};
 
 
-	#pragma omp parallel for
+#pragma omp parallel for
 	for (int index = 0; index < size; ++index) {
 		const unsigned int type = obstacles[index];
 
@@ -318,20 +304,21 @@ static void lbm_substep1(
 		}
 	}
 
-	#undef F
-	#undef NEW_F
+#undef F
+#undef NEW_F
 }
 
 
 static void lbm_substep2(
-		const int width
-		, const int height
-		, float f[]
-		, const float new_f[]
-		, const unsigned int obstacles[]
-	      ) {
-	#define F(x) f[size * x + index]
-	#define NEW_F(x) new_f[size * x + index]
+		const int width,
+		const int height,
+		float f[],
+		const float new_f[],
+		const unsigned int obstacles[]) {
+
+
+#define F(x) f[size * x + index]
+#define NEW_F(x) new_f[size * x + index]
 
 
 	const int size = width * height;
@@ -361,8 +348,8 @@ static void lbm_substep2(
 		}
 	}
 
-	#undef F
-	#undef NEW_F
+#undef F
+#undef NEW_F
 }
 
 
@@ -486,7 +473,7 @@ static float colormap_blue(float x) {
 
 
 void lbm_write_on_texture() {
-	#pragma omp parallel for
+#pragma omp parallel for
 	for (int i = 0; i < width * height; ++i) {
 		unsigned char *base = lbm_texture_buffer + 3 * i;
 
