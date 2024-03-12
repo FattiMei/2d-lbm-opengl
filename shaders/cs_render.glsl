@@ -44,20 +44,20 @@ float colormap_blue(float x) {
 
 
 void main() {
-	ivec2 index = ivec2(gl_GlobalInvocationID.xy);
+	const int size = shape.x * shape.y;
+	const int index = int(gl_GlobalInvocationID.x);
 
-	if (index.x < shape.x && index.y < shape.y) {
-		float x = 255.0 * (u_out[index.y * shape.x + index.x] / 0.3);
+	if (index < size) {
+		float x = 255.0 * (u_out[index] / 0.3);
 		vec4 color;
 
-		if ((obstacles[index.y * shape.x + index.x] & 1) == 1) {
+		if ((obstacles[index] & 1) == 1) {
 			color = vec4(1.0, 1.0, 1.0, 1.0);
 		}
 		else {
 			color = vec4(colormap_red(x) / 255.0, colormap_green(x) / 255.0, colormap_blue(x) / 255.0, 1.0);
 		}
 
-
-		imageStore(imgOutput, index, color);
+		imageStore(imgOutput, ivec2(index % shape.x, index / shape.x), color);
 	}
 }

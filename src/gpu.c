@@ -289,7 +289,7 @@ void lbm_write_on_texture() {
 	glBindTexture(GL_TEXTURE_2D, lbm_texture_id);
 
 	glUseProgram(cs_render_program);
-	glDispatchCompute(width, height, 1);
+	glDispatchCompute(width * height, 1, 1);
 	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 }
 
