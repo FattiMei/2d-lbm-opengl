@@ -53,7 +53,7 @@ static int *obstacles;
 static unsigned int cs_render_program;
 static unsigned int cs_substep1_program;
 static unsigned int cs_substep2_program;
-
+static unsigned int cs_reset_field_program;
 
 static unsigned int ssbo_obstacles;
 static unsigned int ssbo_u_out;
@@ -73,51 +73,19 @@ struct BufferInfo {
 };
 
 
+// @TODO: experiment with usage flag of obstacles and boundary (readonly)
 const struct BufferInfo buffers[] = {
 	{&ssbo_obstacles, 1 * sizeof(*obstacles), (void **) &obstacles, GL_DYNAMIC_DRAW},
-	{&ssbo_u_out    , 1 * sizeof(*u_out)    , (void **) &u_out    , GL_DYNAMIC_DRAW},
-	{&ssbo_ux       , 1 * sizeof(*ux)       , (void **) &ux       , GL_DYNAMIC_DRAW},
-	{&ssbo_uy       , 1 * sizeof(*uy)       , (void **) &uy       , GL_DYNAMIC_DRAW},
-	{&ssbo_rho      , 1 * sizeof(*rho)      , (void **) &rho      , GL_DYNAMIC_DRAW},
-	{&ssbo_f        , 9 * sizeof(*f)        , (void **) &f        , GL_DYNAMIC_DRAW},
-	{&ssbo_new_f    , 9 * sizeof(*new_f)    , (void **) &new_f    , GL_DYNAMIC_DRAW},
+	{&ssbo_u_out    , 1 * sizeof(*u_out)    , NULL                , GL_DYNAMIC_DRAW},
+	{&ssbo_ux       , 1 * sizeof(*ux)       , NULL                , GL_DYNAMIC_DRAW},
+	{&ssbo_uy       , 1 * sizeof(*uy)       , NULL                , GL_DYNAMIC_DRAW},
+	{&ssbo_rho      , 1 * sizeof(*rho)      , NULL                , GL_DYNAMIC_DRAW},
+	{&ssbo_f        , 9 * sizeof(*f)        , NULL                , GL_DYNAMIC_DRAW},
+	{&ssbo_new_f    , 9 * sizeof(*new_f)    , NULL                , GL_DYNAMIC_DRAW},
 	{&ssbo_boundary , 4 * sizeof(*boundary) , (void **) &boundary , GL_DYNAMIC_DRAW}
 };
 
 
-static void lbm_reset_field(float f[], float rho[], float u_out[], float ux[], float uy[], const int width, const int height, const int obstacles[]) {
-	const int size = width * height;
-	const float weights[9] = {
-		4.0 /  9.0,
-		1.0 /  9.0,
-		1.0 /  9.0,
-		1.0 /  9.0,
-		1.0 /  9.0,
-		1.0 / 36.0,
-		1.0 / 36.0,
-		1.0 / 36.0,
-		1.0 / 36.0
-	};
-
-
-	for (int index = 0; index < size; ++index) {
-		u_out[index] = 0.0f;
-
-		if (obstacles[index] & IS_OBSTACLE) {
-			ux[index] = NAN;
-			uy[index] = NAN;
-		}
-		else {
-			for (int i = 0; i < 9; ++i) {
-				f[index + size * i] = weights[i];
-			}
-
-			rho[index] = 1;
-			ux[index]  = 0;
-			uy[index]  = 0;
-		}
-	}
-}
 
 // @TODO: boundary can encode the obstacle information, while being memory efficient
 static void lbm_calc_boundary(int boundary[], const int obstacles[], const int width, const int height) {
@@ -152,18 +120,13 @@ static void lbm_calc_boundary(int boundary[], const int obstacles[], const int w
 
 void lbm_allocate_resources() {
 	obstacles = malloc(    width * height * sizeof(*obstacles));
-	ux        = malloc(    width * height * sizeof(*ux));
-	uy        = malloc(    width * height * sizeof(*uy));
-	u_out     = malloc(    width * height * sizeof(*u_out));
-	rho       = malloc(    width * height * sizeof(*rho));
-	f         = malloc(9 * width * height * sizeof(*f));
-	new_f     = malloc(9 * width * height * sizeof(*new_f));
 	boundary  = malloc(4 * width * height * sizeof(*boundary));
 
 
 	// allocate this memory on the gpu (in the order of 2MB of data)
 	for (size_t i = 0; i < sizeof(buffers) / sizeof(*buffers); ++i) {
 		glGenBuffers(1, buffers[i].id);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, i, *(buffers[i].id));
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, *(buffers[i].id));
 		glBufferData(GL_SHADER_STORAGE_BUFFER, buffers[i].size_multiplier * width * height, NULL, buffers[i].usage);
 	}
@@ -223,8 +186,6 @@ void lbm_init(FILE *in) {
 
 
 	lbm_calc_boundary(boundary, obstacles, width, height);
-	lbm_reset_field(f, rho, u_out, ux, uy, width, height, obstacles);
-
 
 	lbm_texture_id = texture_create(width, height);
 
@@ -232,9 +193,10 @@ void lbm_init(FILE *in) {
 	cs_render_program = compute_program_load_from_file("shaders/cs_render.glsl");
 	cs_substep1_program = compute_program_load_from_file("shaders/cs_substep1.glsl");
 	cs_substep2_program = compute_program_load_from_file("shaders/cs_substep2.glsl");
+	cs_reset_field_program = compute_program_load_from_file("shaders/cs_reset_field.glsl");
 
 
-	// sending all data to gpu
+	// sending obstacles and boundary data to gpu
 	for (size_t i = 0; i < sizeof(buffers) / sizeof(*buffers); ++i) {
 		if (buffers[i].host_counterpart != NULL) {
 			glBindBuffer(GL_SHADER_STORAGE_BUFFER, *(buffers[i].id));
@@ -247,15 +209,6 @@ void lbm_init(FILE *in) {
 			glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
 		}
 	}
-
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, ssbo_obstacles);
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, ssbo_u_out);
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, ssbo_ux);
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, ssbo_uy);
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, ssbo_rho);
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, ssbo_f);
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, ssbo_new_f);
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, ssbo_boundary);
 
 
 	// passing uniforms that will be constant in all execution
@@ -270,11 +223,19 @@ void lbm_init(FILE *in) {
 
 	glUseProgram(cs_substep2_program);
 	glUniform2i(0, width, height);
+
+	glUseProgram(cs_reset_field_program);
+	glUniform2i(0, width, height);
+	glDispatchCompute(width * height, 1, 1);
+	glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 }
 
 
 void lbm_reload() {
-	lbm_reset_field(f, rho, u_out, ux, uy, width, height, obstacles);
+	glUseProgram(cs_reset_field_program);
+	glDispatchCompute(width * height, 1, 1);
+	glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+
 	it = 0;
 }
 
