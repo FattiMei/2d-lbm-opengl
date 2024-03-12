@@ -50,6 +50,9 @@ static float *u_out,
 static int *obstacles;
 
 
+#define WORK_GROUP_SIZE 10
+
+
 static unsigned int cs_render_program;
 static unsigned int cs_substep1_program;
 static unsigned int cs_substep2_program;
@@ -235,14 +238,14 @@ void lbm_init(FILE *in) {
 
 	glUseProgram(cs_reset_field_program);
 	glUniform2i(0, width, height);
-	glDispatchCompute(width * height, 1, 1);
+	glDispatchCompute(width * height / WORK_GROUP_SIZE, 1, 1);
 	glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 }
 
 
 void lbm_reload() {
 	glUseProgram(cs_reset_field_program);
-	glDispatchCompute(width * height, 1, 1);
+	glDispatchCompute(width * height / WORK_GROUP_SIZE, 1, 1);
 	glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
 	it = 0;
@@ -254,11 +257,11 @@ void lbm_step() {
 
 	glUseProgram(cs_substep1_program);
 	glUniform1f(1, u_in_now);
-	glDispatchCompute(width * height, 1, 1);
+	glDispatchCompute(width * height / WORK_GROUP_SIZE, 1, 1);
 	glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
 	glUseProgram(cs_substep2_program);
-	glDispatchCompute(width * height, 1, 1);
+	glDispatchCompute(width * height / WORK_GROUP_SIZE, 1, 1);
 	glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
 	++it;
@@ -289,7 +292,7 @@ void lbm_write_on_texture() {
 	glBindTexture(GL_TEXTURE_2D, lbm_texture_id);
 
 	glUseProgram(cs_render_program);
-	glDispatchCompute(width * height, 1, 1);
+	glDispatchCompute(width * height / WORK_GROUP_SIZE, 1, 1);
 	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 }
 
