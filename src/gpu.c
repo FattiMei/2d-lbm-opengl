@@ -17,21 +17,6 @@ static int it = 0;
 static bool first_write = true;
 
 
-static unsigned int cs_render_program;
-static unsigned int cs_substep1_program;
-static unsigned int cs_substep2_program;
-
-
-static unsigned int ssbo_obstacles;
-static unsigned int ssbo_u_out;
-static unsigned int ssbo_ux;
-static unsigned int ssbo_uy;
-static unsigned int ssbo_rho;
-static unsigned int ssbo_f;
-static unsigned int ssbo_new_f;
-static unsigned int ssbo_boundary;
-
-
 static float reynolds, u_in;
 static float nu,
 	     tau,
@@ -63,6 +48,41 @@ static float *u_out,
 #define RIGHT_WALL 16
 
 static int *obstacles;
+
+
+static unsigned int cs_render_program;
+static unsigned int cs_substep1_program;
+static unsigned int cs_substep2_program;
+
+
+static unsigned int ssbo_obstacles;
+static unsigned int ssbo_u_out;
+static unsigned int ssbo_ux;
+static unsigned int ssbo_uy;
+static unsigned int ssbo_rho;
+static unsigned int ssbo_f;
+static unsigned int ssbo_new_f;
+static unsigned int ssbo_boundary;
+
+
+struct BufferInfo {
+	unsigned int *id;
+	int size_multiplier;
+	void **host_counterpart;
+	GLenum usage;
+};
+
+
+const struct BufferInfo buffers[] = {
+	{&ssbo_obstacles, 1 * sizeof(*obstacles), (void **) &obstacles, GL_DYNAMIC_DRAW},
+	{&ssbo_u_out    , 1 * sizeof(*u_out)    , (void **) &u_out    , GL_DYNAMIC_DRAW},
+	{&ssbo_ux       , 1 * sizeof(*ux)       , (void **) &ux       , GL_DYNAMIC_DRAW},
+	{&ssbo_uy       , 1 * sizeof(*uy)       , (void **) &uy       , GL_DYNAMIC_DRAW},
+	{&ssbo_rho      , 1 * sizeof(*rho)      , (void **) &rho      , GL_DYNAMIC_DRAW},
+	{&ssbo_f        , 9 * sizeof(*f)        , (void **) &f        , GL_DYNAMIC_DRAW},
+	{&ssbo_new_f    , 9 * sizeof(*new_f)    , (void **) &new_f    , GL_DYNAMIC_DRAW},
+	{&ssbo_boundary , 4 * sizeof(*boundary) , (void **) &boundary , GL_DYNAMIC_DRAW}
+};
 
 
 static void lbm_reset_field(float f[], float rho[], float u_out[], float ux[], float uy[], const int width, const int height, const int obstacles[]) {
@@ -141,39 +161,12 @@ void lbm_allocate_resources() {
 	boundary  = malloc(4 * width * height * sizeof(*boundary));
 
 
-	// allocate this memory on the gpu (2MB of data)
-	// @TODO: avoid this replication
-	glGenBuffers(1, &ssbo_obstacles);
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_obstacles);
-	glBufferData(GL_SHADER_STORAGE_BUFFER, width * height * sizeof(*obstacles), NULL, GL_DYNAMIC_DRAW);
-
-	glGenBuffers(1, &ssbo_ux);
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_ux);
-	glBufferData(GL_SHADER_STORAGE_BUFFER, width * height * sizeof(*ux), NULL, GL_DYNAMIC_DRAW);
-
-	glGenBuffers(1, &ssbo_uy);
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_uy);
-	glBufferData(GL_SHADER_STORAGE_BUFFER, width * height * sizeof(*uy), NULL, GL_DYNAMIC_DRAW);
-
-	glGenBuffers(1, &ssbo_u_out);
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_u_out);
-	glBufferData(GL_SHADER_STORAGE_BUFFER, width * height * sizeof(*u_out), NULL, GL_DYNAMIC_DRAW);
-
-	glGenBuffers(1, &ssbo_rho);
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_rho);
-	glBufferData(GL_SHADER_STORAGE_BUFFER, width * height * sizeof(*rho), NULL, GL_DYNAMIC_DRAW);
-
-	glGenBuffers(1, &ssbo_f);
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_f);
-	glBufferData(GL_SHADER_STORAGE_BUFFER, 9 * width * height * sizeof(*f), NULL, GL_DYNAMIC_DRAW);
-
-	glGenBuffers(1, &ssbo_new_f);
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_new_f);
-	glBufferData(GL_SHADER_STORAGE_BUFFER, 9 * width * height * sizeof(*new_f), NULL, GL_DYNAMIC_DRAW);
-
-	glGenBuffers(1, &ssbo_boundary);
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_boundary);
-	glBufferData(GL_SHADER_STORAGE_BUFFER, 4 * width * height * sizeof(*boundary), NULL, GL_DYNAMIC_DRAW);
+	// allocate this memory on the gpu (in the order of 2MB of data)
+	for (size_t i = 0; i < sizeof(buffers) / sizeof(*buffers); ++i) {
+		glGenBuffers(1, buffers[i].id);
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, *(buffers[i].id));
+		glBufferData(GL_SHADER_STORAGE_BUFFER, buffers[i].size_multiplier * width * height, NULL, buffers[i].usage);
+	}
 }
 
 
@@ -241,102 +234,19 @@ void lbm_init(FILE *in) {
 	cs_substep2_program = compute_program_load_from_file("shaders/cs_substep2.glsl");
 
 
-	// @TODO: replicate in a programmatic way the sending of data to the gpu
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_obstacles);
-	void *ptr = glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_WRITE_ONLY);
+	// sending all data to gpu
+	for (size_t i = 0; i < sizeof(buffers) / sizeof(*buffers); ++i) {
+		if (buffers[i].host_counterpart != NULL) {
+			glBindBuffer(GL_SHADER_STORAGE_BUFFER, *(buffers[i].id));
 
-	if (ptr == NULL) {
-		printf("got NULL pointer\n");
+			void *ptr = glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_WRITE_ONLY);
+			if (ptr) {
+				memcpy(ptr, *(buffers[i].host_counterpart), buffers[i].size_multiplier * width * height);
+			}
+
+			glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+		}
 	}
-	else {
-		memcpy(ptr, obstacles, width * height * sizeof(int));
-		glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
-	}
-
-
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_u_out);
-	ptr = glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_WRITE_ONLY);
-
-	if (ptr == NULL) {
-		printf("got NULL pointer\n");
-	}
-	else {
-		memcpy(ptr, u_out, width * height * sizeof(float));
-		glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
-	}
-
-
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_ux);
-	ptr = glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_WRITE_ONLY);
-
-	if (ptr == NULL) {
-		printf("got NULL pointer\n");
-	}
-	else {
-		memcpy(ptr, ux, width * height * sizeof(float));
-		glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
-	}
-
-
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_uy);
-	ptr = glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_WRITE_ONLY);
-
-	if (ptr == NULL) {
-		printf("got NULL pointer\n");
-	}
-	else {
-		memcpy(ptr, uy, width * height * sizeof(float));
-		glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
-	}
-
-
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_rho);
-	ptr = glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_WRITE_ONLY);
-
-	if (ptr == NULL) {
-		printf("got NULL pointer\n");
-	}
-	else {
-		memcpy(ptr, rho, width * height * sizeof(float));
-		glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
-	}
-
-
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_f);
-	ptr = glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_WRITE_ONLY);
-
-	if (ptr == NULL) {
-		printf("got NULL pointer\n");
-	}
-	else {
-		memcpy(ptr, f, 9 * width * height * sizeof(float));
-		glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
-	}
-
-
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_new_f);
-	ptr = glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_WRITE_ONLY);
-
-	if (ptr == NULL) {
-		printf("got NULL pointer\n");
-	}
-	else {
-		memcpy(ptr, new_f, 9 * width * height * sizeof(float));
-		glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
-	}
-
-
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_boundary);
-	ptr = glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_WRITE_ONLY);
-
-	if (ptr == NULL) {
-		printf("got NULL pointer\n");
-	}
-	else {
-		memcpy(ptr, boundary, 4 * width * height * sizeof(int));
-		glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
-	}
-
 
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, ssbo_obstacles);
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, ssbo_u_out);
