@@ -134,7 +134,17 @@ void lbm_allocate_resources() {
 
 
 void lbm_release_resources() {
+	free(obstacles);
+	free(boundary);
 
+	for (size_t i = 0; i < sizeof(buffers) / sizeof(*buffers); ++i) {
+		glDeleteBuffers(1, buffers[i].id);
+	}
+
+	glDeleteProgram(cs_render_program);
+	glDeleteProgram(cs_substep1_program);
+	glDeleteProgram(cs_substep2_program);
+	glDeleteProgram(cs_reset_field_program);
 }
 
 
@@ -186,7 +196,6 @@ void lbm_init(FILE *in) {
 
 
 	lbm_calc_boundary(boundary, obstacles, width, height);
-
 	lbm_texture_id = texture_create(width, height);
 
 
@@ -285,7 +294,6 @@ void lbm_write_on_texture() {
 }
 
 
-// @TODO: fill
 void lbm_close() {
-
+	lbm_release_resources();
 }
