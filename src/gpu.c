@@ -263,7 +263,15 @@ void lbm_write_on_file(FILE *out) {
 	}
 
 	fprintf(out, "%d\n", it);
-	fwrite(u_out, sizeof(float), width * height, out);
+
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_u_out);
+	void *ptr = glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_WRITE_ONLY);
+
+	if (ptr) {
+		fwrite(ptr, sizeof(float), width * height, out);
+	}
+
+	glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
 }
 
 
