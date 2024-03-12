@@ -10,13 +10,11 @@
 
 int width;
 int height;
-float *u_out;
 unsigned int lbm_texture_id;
 
 
 static int it = 0;
 static bool first_write = true;
-static unsigned char *lbm_texture_buffer;
 
 
 static unsigned int cs_render_program;
@@ -48,15 +46,15 @@ static float nu,
 
 
 static int *boundary;
-static float *ux,
+static float *u_out,
+	     *ux,
 	     *uy,
 	     *f,
 	     *new_f,
 	     *rho;
 
 
-// this variable was a bool, now it has become an unsigned char (same memory footprint) and we will use the possible values to store information about obstacles and walls in a bitfield fashion
-// at the moment 0 means no obstacle and 1 means obstacle
+// this variable was a bool, now it has become an int and we will use the possible values to store information about obstacles and walls in a bitfield
 // since we can't have byte data type in glsl we must declare obstacles as int
 #define IS_OBSTACLE 1
 #define TOP_WALL 2
@@ -67,30 +65,23 @@ static float *ux,
 static int *obstacles;
 
 
-static void lbm_reset_field(
-	  float f[]
-	, float rho[]
-	, float ux[]
-	, float uy[]
-	, const int width
-	, const int height
-	, const int obstacles[]
-) {
+static void lbm_reset_field(float f[], float rho[], float u_out[], float ux[], float uy[], const int width, const int height, const int obstacles[]) {
 	const int size = width * height;
 	const float weights[9] = {
-		  4.0 / 9.0
-		, 1.0 / 9.0
-		, 1.0 / 9.0
-		, 1.0 / 9.0
-		, 1.0 / 9.0
-		, 1.0 / 36.0
-		, 1.0 / 36.0
-		, 1.0 / 36.0
-		, 1.0 / 36.0
+		4.0 /  9.0,
+		1.0 /  9.0,
+		1.0 /  9.0,
+		1.0 /  9.0,
+		1.0 /  9.0,
+		1.0 / 36.0,
+		1.0 / 36.0,
+		1.0 / 36.0,
+		1.0 / 36.0
 	};
 
 
 	for (int index = 0; index < size; ++index) {
+		u_out[index] = 0.0f;
 
 		if (obstacles[index] & IS_OBSTACLE) {
 			ux[index] = NAN;
@@ -108,14 +99,8 @@ static void lbm_reset_field(
 	}
 }
 
-
 // @TODO: boundary can encode the obstacle information, while being memory efficient
-static void lbm_calc_boundary(
-	  int boundary[]
-	, const int obstacles[]
-	, const int width
-	, const int height
-) {
+static void lbm_calc_boundary(int boundary[], const int obstacles[], const int width, const int height) {
 	const int dirs[4][2] = {{1, 0}, {0, 1}, {1, 1}, {-1, 1}};
 	const int size = width * height;
 
@@ -145,6 +130,58 @@ static void lbm_calc_boundary(
 }
 
 
+void lbm_allocate_resources() {
+	obstacles = malloc(    width * height * sizeof(*obstacles));
+	ux        = malloc(    width * height * sizeof(*ux));
+	uy        = malloc(    width * height * sizeof(*uy));
+	u_out     = malloc(    width * height * sizeof(*u_out));
+	rho       = malloc(    width * height * sizeof(*rho));
+	f         = malloc(9 * width * height * sizeof(*f));
+	new_f     = malloc(9 * width * height * sizeof(*new_f));
+	boundary  = malloc(4 * width * height * sizeof(*boundary));
+
+
+	// allocate this memory on the gpu (2MB of data)
+	// @TODO: avoid this replication
+	glGenBuffers(1, &ssbo_obstacles);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_obstacles);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, width * height * sizeof(*obstacles), NULL, GL_DYNAMIC_DRAW);
+
+	glGenBuffers(1, &ssbo_ux);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_ux);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, width * height * sizeof(*ux), NULL, GL_DYNAMIC_DRAW);
+
+	glGenBuffers(1, &ssbo_uy);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_uy);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, width * height * sizeof(*uy), NULL, GL_DYNAMIC_DRAW);
+
+	glGenBuffers(1, &ssbo_u_out);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_u_out);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, width * height * sizeof(*u_out), NULL, GL_DYNAMIC_DRAW);
+
+	glGenBuffers(1, &ssbo_rho);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_rho);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, width * height * sizeof(*rho), NULL, GL_DYNAMIC_DRAW);
+
+	glGenBuffers(1, &ssbo_f);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_f);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, 9 * width * height * sizeof(*f), NULL, GL_DYNAMIC_DRAW);
+
+	glGenBuffers(1, &ssbo_new_f);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_new_f);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, 9 * width * height * sizeof(*new_f), NULL, GL_DYNAMIC_DRAW);
+
+	glGenBuffers(1, &ssbo_boundary);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_boundary);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, 4 * width * height * sizeof(*boundary), NULL, GL_DYNAMIC_DRAW);
+}
+
+
+void lbm_release_resources() {
+
+}
+
+
 // to be called only after opening an opengl context + glad setup
 void lbm_init(FILE *in) {
 	int max_it;
@@ -165,54 +202,12 @@ void lbm_init(FILE *in) {
 	sum_param = 0.5 * (omega_plus + omega_minus);
 
 
-	obstacles = (int  *) malloc(width * height * sizeof(int));
-	ux        = (float *) malloc(width * height * sizeof(float));
-	uy        = (float *) malloc(width * height * sizeof(float));
-	u_out     = (float *) malloc(width * height * sizeof(float));
-	rho       = (float *) malloc(width * height * sizeof(float));
-	f         = (float *) malloc(9 * width * height * sizeof(float));
-	new_f     = (float *) malloc(9 * width * height * sizeof(float));
-	boundary  = (int   *) malloc(4 * width * height * sizeof(int));
-
-
-	// allocate this memory on the gpu (2MB of data)
-	// @TODO: avoid this replication
-	glGenBuffers(1, &ssbo_obstacles);
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_obstacles);
-	glBufferData(GL_SHADER_STORAGE_BUFFER, width * height * sizeof(int), NULL, GL_DYNAMIC_DRAW);
-
-	glGenBuffers(1, &ssbo_ux);
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_ux);
-	glBufferData(GL_SHADER_STORAGE_BUFFER, width * height * sizeof(float), NULL, GL_DYNAMIC_DRAW);
-
-	glGenBuffers(1, &ssbo_uy);
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_uy);
-	glBufferData(GL_SHADER_STORAGE_BUFFER, width * height * sizeof(float), NULL, GL_DYNAMIC_DRAW);
-
-	glGenBuffers(1, &ssbo_u_out);
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_u_out);
-	glBufferData(GL_SHADER_STORAGE_BUFFER, width * height * sizeof(float), NULL, GL_DYNAMIC_DRAW);
-
-	glGenBuffers(1, &ssbo_rho);
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_rho);
-	glBufferData(GL_SHADER_STORAGE_BUFFER, width * height * sizeof(float), NULL, GL_DYNAMIC_DRAW);
-
-	glGenBuffers(1, &ssbo_f);
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_f);
-	glBufferData(GL_SHADER_STORAGE_BUFFER, 9 * width * height * sizeof(float), NULL, GL_DYNAMIC_DRAW);
-
-	glGenBuffers(1, &ssbo_new_f);
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_new_f);
-	glBufferData(GL_SHADER_STORAGE_BUFFER, 9 * width * height * sizeof(float), NULL, GL_DYNAMIC_DRAW);
-
-	glGenBuffers(1, &ssbo_boundary);
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_boundary);
-	glBufferData(GL_SHADER_STORAGE_BUFFER, 4 * width * height * sizeof(int), NULL, GL_DYNAMIC_DRAW);
+	lbm_allocate_resources();
 
 
 	// this procedure could be astracted away
 	int x, y;
-	memset(obstacles, 0, width * height * sizeof(int));
+	memset(obstacles, 0, width * height * sizeof(*obstacles));
 	while (fscanf(in, "%d %d\n", &x, &y) == 2) {
 		obstacles[x + y * width] |= IS_OBSTACLE;
 	}
@@ -223,25 +218,22 @@ void lbm_init(FILE *in) {
 	const int size = width * height;
 
 	for (int i = 0; i < width; ++i) {
-		// @TODO: find which way is up
 		obstacles[i]            |= TOP_WALL;
 		obstacles[size - 1 - i] |= BOTTOM_WALL;
 	}
 
 
 	for (int j = 0; j < height; ++j) {
-		// @TODO: find which way is right
 		obstacles[j * width] |= LEFT_WALL;
 		obstacles[j * width + width - 1] |= RIGHT_WALL;
 	}
 
 
 	lbm_calc_boundary(boundary, obstacles, width, height);
-	lbm_reset_field(f, rho, ux, uy, width, height, obstacles);
+	lbm_reset_field(f, rho, u_out, ux, uy, width, height, obstacles);
 
 
 	lbm_texture_id = texture_create(width, height);
-	lbm_texture_buffer = (unsigned char *) malloc(3 * width * height * sizeof(unsigned char));
 
 
 	cs_render_program = compute_program_load_from_file("shaders/cs_render.glsl");
@@ -372,7 +364,7 @@ void lbm_init(FILE *in) {
 
 
 void lbm_reload() {
-	lbm_reset_field(f, rho, ux, uy, width, height, obstacles);
+	lbm_reset_field(f, rho, u_out, ux, uy, width, height, obstacles);
 	it = 0;
 }
 
@@ -393,7 +385,7 @@ void lbm_step() {
 }
 
 
-void lbm_write(FILE *out) {
+void lbm_write_on_file(FILE *out) {
 	if (first_write) {
 		fprintf(out, "%d %d\n", width, height);
 		first_write = false;
