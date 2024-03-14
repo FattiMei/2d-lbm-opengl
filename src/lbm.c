@@ -122,13 +122,13 @@ static void lbm_calc_boundary(int boundary[], const unsigned char obstacles[], c
 
 				// check the adjacent cells in the current direction
 				if (col - dx >= 0 && row - dy >= 0 && (obstacles[col - dx + (row - dy) * width] & IS_OBSTACLE)) {
-					boundary[size * d + index] = -1;
+					boundary[index * 4 + d] = -1;
 				}
 				else if (col + dx < width && row + dy < height && (obstacles[col + dx + (row + dy) * width] & IS_OBSTACLE)) {
-					boundary[size * d + index] = 1;
+					boundary[index * 4 + d] = 1;
 				}
 				else {
-					boundary[size * d + index] = 0;
+					boundary[index * 4 + d] = 0;
 				}
 			}
 		}
@@ -297,28 +297,28 @@ static void lbm_substep1(
 
 			// regular bounce back
 
-			if (boundary[index] == 1) {
+			if (boundary[index * 4] == 1) {
 				F(3) = NEW_F(1);
 			}
-			else if (boundary[index] == -1) {
+			else if (boundary[index * 4] == -1) {
 				F(1) = NEW_F(3);
 			}
-			if (boundary[size + index] == 1) {
+			if (boundary[index * 4 + 1] == 1) {
 				F(2) = NEW_F(4);
 			}
-			else if (boundary[size + index] == -1) {
+			else if (boundary[index * 4 + 1] == -1) {
 				F(4) = NEW_F(2);
 			}
-			if (boundary[size * 2 + index] == 1) {
+			if (boundary[index * 4 + 2] == 1) {
 				F(6) = NEW_F(8);
 			}
-			else if (boundary[size * 2 + index] == -1) {
+			else if (boundary[index * 4 + 2] == -1) {
 				F(8) = NEW_F(6);
 			}
-			if (boundary[size * 3 + index] == 1) {
+			if (boundary[index * 4 + 3] == 1) {
 				F(5) = NEW_F(7);
 			}
-			else if (boundary[size * 3 + index] == -1) {
+			else if (boundary[index * 4 + 3] == -1) {
 				F(7) = NEW_F(5);
 			}
 		}
