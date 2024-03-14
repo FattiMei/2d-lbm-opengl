@@ -15,6 +15,7 @@ bool paused = false;
 
 int main(int argc, char *argv[]) {
 	FILE *in = NULL;
+	int frames = 0;
 
 
 	if (argc == 1) {
@@ -43,7 +44,19 @@ int main(int argc, char *argv[]) {
 	window_set_callbacks();
 
 
+	double last_time = glfwGetTime();
+
 	while (!window_should_close()) {
+		double current_time = glfwGetTime();
+		++frames;
+
+		if (current_time - last_time >= 1.0) {
+			printf("%f ms/frame\n", (current_time - last_time) / ((double) frames));
+
+			frames = 0;
+			last_time += 1.0;
+		}
+
 		if (!paused) {
 			lbm_step();
 			lbm_write_on_texture();
