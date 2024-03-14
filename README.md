@@ -23,19 +23,28 @@ It is particularly difficult to port the lbm functions to compute shaders. Here 
 
 
 ## Steps in development
- * Port the lbm computation to compute shaders (not fun)
- * OpenGL <-> OpenCL interop (no thank you)
+ * Port the lbm computation to compute shaders
  * Experiment with different work group size to maximize performance
- * ImGui interactivity (paused until compute shaders are solved)
+ * Interactivity
    - start/stop the iterations (already implemented)
-   - reload the experiment (yes)
+   - reload the experiment (already implemented)
    - count the FPS
+   - ImGui integration
+ * OpenGL <-> OpenCL interop (open for pull requests)
 
 
 ## Dependencies
  * opengl 4.3
  * glfw3 (libglfw3-dev for ubuntu and debian systems)
+ * make
 
 
 ## Usage
 Out of the box: `make run`
+
+
+## API and decoupling
+At the time of `40db3b` the serial and gpu implementation share a substantial part of code, I want to remove this duplication by using this mechanism:
+ * the lbm file implements higher level API functions, and it calls internal functions that are implementation dependent
+ * each implementation implements these functions and also some higher level ones
+ * at link time you would have to link both the lbm object and the desired implementation object
