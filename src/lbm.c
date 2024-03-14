@@ -78,6 +78,33 @@ static void lbm_reset_field(float f[], float rho[], float u_out[], float ux[], f
 }
 
 
+static void lbm_populate_obstacles(FILE *in, unsigned char obstacles[]) {
+	int x, y;
+	memset(obstacles, 0, width * height * sizeof(*obstacles));
+	while (fscanf(in, "%d %d\n", &x, &y) == 2) {
+		obstacles[x + y * width] |= IS_OBSTACLE;
+	}
+	fclose(in);
+
+
+	// populate obstacles wall information
+	const int size = width * height;
+
+	for (int i = 0; i < width; ++i) {
+		// @TODO: find which way is up
+		obstacles[i]            |= TOP_WALL;
+		obstacles[size - 1 - i] |= BOTTOM_WALL;
+	}
+
+
+	for (int j = 0; j < height; ++j) {
+		// @TODO: find which way is right
+		obstacles[j * width] |= LEFT_WALL;
+		obstacles[j * width + width - 1] |= RIGHT_WALL;
+	}
+}
+
+
 // @TODO: boundary can encode the obstacle information, while being memory efficient, not sure if that's the case, look at shape
 static void lbm_calc_boundary(int boundary[], const unsigned char obstacles[], const int width, const int height) {
 	const int dirs[4][2] = {{1, 0}, {0, 1}, {1, 1}, {-1, 1}};
@@ -356,6 +383,8 @@ void lbm_allocate_resources() {
 	f         = malloc(9 * width * height * sizeof(*f));
 	new_f     = malloc(9 * width * height * sizeof(*new_f));
 	boundary  = malloc(4 * width * height * sizeof(*boundary));
+
+	lbm_texture_buffer = malloc(3 * width * height * sizeof(*lbm_texture_buffer));
 }
 
 
@@ -394,40 +423,12 @@ void lbm_init(FILE *in) {
 
 
 	lbm_allocate_resources();
+	lbm_texture_id = texture_create(width, height);
 
 
-	// this procedure could be astracted away
-	int x, y;
-	memset(obstacles, 0, width * height * sizeof(*obstacles));
-	while (fscanf(in, "%d %d\n", &x, &y) == 2) {
-		obstacles[x + y * width] |= IS_OBSTACLE;
-	}
-	fclose(in);
-
-
-	// populate obstacles wall information
-	const int size = width * height;
-
-	for (int i = 0; i < width; ++i) {
-		// @TODO: find which way is up
-		obstacles[i]            |= TOP_WALL;
-		obstacles[size - 1 - i] |= BOTTOM_WALL;
-	}
-
-
-	for (int j = 0; j < height; ++j) {
-		// @TODO: find which way is right
-		obstacles[j * width] |= LEFT_WALL;
-		obstacles[j * width + width - 1] |= RIGHT_WALL;
-	}
-
-
+	lbm_populate_obstacles(in, obstacles);
 	lbm_calc_boundary(boundary, obstacles, width, height);
 	lbm_reset_field(f, rho, u_out, ux, uy, width, height);
-
-
-	lbm_texture_id = texture_create(width, height);
-	lbm_texture_buffer = (unsigned char *) malloc(3 * width * height * sizeof(unsigned char));
 }
 
 
