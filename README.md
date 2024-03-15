@@ -48,3 +48,5 @@ At the time of `40db3b` the serial and gpu implementation share a substantial pa
  * the lbm file implements higher level API functions, and it calls internal functions that are implementation dependent
  * each implementation implements these functions and also some higher level ones
  * at link time you would have to link both the lbm object and the desired implementation object
+
+Update: I'm at peace with having duplication in lbm.c and gpu.c, will get back to this problem once I get a good idea
