@@ -29,13 +29,13 @@ build/%.o: src/%.c
 
 
 release: $(serial_src)
-	$(CC) $(OMPFLAGS) -O2 -o $@ $^ $(LIBS)
+	$(CC) $(INCLUDE) $(CCFLAGS) $(OMPFLAGS) -O2 -o $@ $^ $(LIBS)
 
 
 run: parallel
 	./$^ data/input.txt output.bin
 
 
-.PHONY clean:
+.PHONY: clean
 clean:
 	rm -f $(serial_obj) $(parallel_obj) serial parallel release
