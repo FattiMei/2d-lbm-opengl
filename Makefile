@@ -1,6 +1,6 @@
 CC       = gcc
 CCFLAGS  = -Wall -Wextra -Wpedantic
-OPTFLAGS = -O2 -fopenmp
+OPTFLAGS = -fopenmp
 INCLUDE  = -I ./include
 LIBS     = -lm -lglfw -lGL
 
@@ -13,7 +13,7 @@ targets  = $(objects)
 all: serial parallel
 
 
-serial: build/render.o build/glad.o build/lbm.o build/main.o build/shader.o build/texture.o build/window.o
+serial: build/render.o build/glad.o build/lbm.o build/serial.o build/main.o build/shader.o build/texture.o build/window.o
 	$(CC) $(OPTFLAGS) $(CONFIG) -o $@ $^ $(LIBS)
 
 

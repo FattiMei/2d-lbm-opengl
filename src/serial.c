@@ -1,3 +1,4 @@
+#define LBM_INTERNALS
 #include "lbm.h"
 #include "texture.h"
 #include "glad.h"
@@ -7,6 +8,7 @@
 #include <string.h>
 
 
+/*
 int width;
 int height;
 unsigned int lbm_texture_id;
@@ -14,8 +16,6 @@ unsigned int lbm_texture_id;
 
 static int it = 0;
 static bool first_write = true;
-
-
 static unsigned char *lbm_texture_buffer;
 
 
@@ -517,3 +517,4 @@ void lbm_write_on_file(FILE *out) {
 void lbm_close() {
 	lbm_release_resources();
 }
+*/
