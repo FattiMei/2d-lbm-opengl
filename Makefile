@@ -1,28 +1,35 @@
 CC       = gcc
 CCFLAGS  = -Wall -Wextra -Wpedantic
-OPTFLAGS = -fopenmp
+OMPFLAGS = -fopenmp
 INCLUDE  = -I ./include
 LIBS     = -lm -lglfw -lGL
 
 
-sources  = $(wildcard src/*.c)
-objects  = $(patsubst src/%.c,build/%.o,$(sources))
-targets  = $(objects)
+serial_src   = src/glad.c src/window.c src/texture.c src/shader.c src/render.c src/lbm.c src/main.c
+serial_obj   = $(patsubst src/%.c,build/%.o,$(serial_src))
+
+
+parallel_src = src/glad.c src/window.c src/texture.c src/shader.c src/render.c src/gpu.c src/main.c
+parallel_obj = $(patsubst src/%.c,build/%.o,$(parallel_src))
 
 
 all: serial parallel
 
 
-serial: build/render.o build/glad.o build/lbm.o build/serial.o build/main.o build/shader.o build/texture.o build/window.o
-	$(CC) $(OPTFLAGS) $(CONFIG) -o $@ $^ $(LIBS)
+serial: $(serial_obj)
+	$(CC) $(OMPFLAGS) -o $@ $^ $(LIBS)
 
 
-parallel: build/render.o build/glad.o build/gpu.o build/main.o build/shader.o build/texture.o build/window.o
-	$(CC) $(OPTFLAGS) $(CONFIG) -o $@ $^ $(LIBS)
+parallel: $(parallel_obj)
+	$(CC) $(OMPFLAGS) -o $@ $^ $(LIBS)
 
 
 build/%.o: src/%.c
-	$(CC) -c $(INCLUDE) $(CCFLAGS) $(OPTFLAGS) $(CONFIG) -o $@ $^
+	$(CC) -c $(INCLUDE) $(CCFLAGS) $(OMPFLAGS) $(CONFIG) -o $@ $^
+
+
+release: $(serial_src)
+	$(CC) $(OMPFLAGS) -O2 -o $@ $^ $(LIBS)
 
 
 run: parallel
@@ -31,4 +38,4 @@ run: parallel
 
 .PHONY clean:
 clean:
-	rm -f $(targets) serial parallel
+	rm -f $(serial_obj) $(parallel_obj) serial parallel release
