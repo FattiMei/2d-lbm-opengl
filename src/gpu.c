@@ -31,12 +31,6 @@ static float nu,
 
 
 static int *boundary;
-static float *u_out,
-	     *ux,
-	     *uy,
-	     *f,
-	     *new_f,
-	     *rho;
 
 
 // this variable was a bool, now it has become an int and we will use the possible values to store information about obstacles and walls in a bitfield
@@ -79,12 +73,12 @@ struct BufferInfo {
 // @TODO: experiment with usage flag of obstacles and boundary (readonly)
 const struct BufferInfo buffers[] = {
 	{&ssbo_obstacles, 1 * sizeof(*obstacles), (void **) &obstacles, GL_DYNAMIC_DRAW},
-	{&ssbo_u_out    , 1 * sizeof(*u_out)    , NULL                , GL_DYNAMIC_DRAW},
-	{&ssbo_ux       , 1 * sizeof(*ux)       , NULL                , GL_DYNAMIC_DRAW},
-	{&ssbo_uy       , 1 * sizeof(*uy)       , NULL                , GL_DYNAMIC_DRAW},
-	{&ssbo_rho      , 1 * sizeof(*rho)      , NULL                , GL_DYNAMIC_DRAW},
-	{&ssbo_f        , 9 * sizeof(*f)        , NULL                , GL_DYNAMIC_DRAW},
-	{&ssbo_new_f    , 9 * sizeof(*new_f)    , NULL                , GL_DYNAMIC_DRAW},
+	{&ssbo_u_out    , 1 * sizeof(double)    , NULL                , GL_DYNAMIC_DRAW},
+	{&ssbo_ux       , 1 * sizeof(double)    , NULL                , GL_DYNAMIC_DRAW},
+	{&ssbo_uy       , 1 * sizeof(double)    , NULL                , GL_DYNAMIC_DRAW},
+	{&ssbo_rho      , 1 * sizeof(double)    , NULL                , GL_DYNAMIC_DRAW},
+	{&ssbo_f        , 9 * sizeof(double)    , NULL                , GL_DYNAMIC_DRAW},
+	{&ssbo_new_f    , 9 * sizeof(double)    , NULL                , GL_DYNAMIC_DRAW},
 	{&ssbo_boundary , 4 * sizeof(*boundary) , (void **) &boundary , GL_DYNAMIC_DRAW}
 };
 

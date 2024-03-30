@@ -1,4 +1,4 @@
-CC       = gcc
+CC       = clang
 CCFLAGS  = -Wall -Wextra -Wpedantic
 OMPFLAGS = -fopenmp
 INCLUDE  = -I ./include
@@ -13,23 +13,26 @@ parallel_src = src/glad.c src/window.c src/texture.c src/shader.c src/render.c s
 parallel_obj = $(patsubst src/%.c,build/%.o,$(parallel_src))
 
 
-all: serial parallel
+target = parallel
+
+
+all: $(target)
 
 
 serial: $(serial_obj)
 	$(CC) $(OMPFLAGS) -o $@ $^ $(LIBS)
 
 
-parallel: $(parallel_obj)
-	$(CC) $(OMPFLAGS) -o $@ $^ $(LIBS)
+$(target): $(parallel_obj)
+	$(CC) -o $@ $^ $(LIBS)
 
 
 build/%.o: src/%.c
 	$(CC) -c $(INCLUDE) $(CCFLAGS) $(OMPFLAGS) $(CONFIG) -o $@ $^
 
 
-release: $(serial_src)
-	$(CC) $(INCLUDE) $(CCFLAGS) $(OMPFLAGS) -O2 -o $@ $^ $(LIBS)
+release: $(parallel_src)
+	$(CC) $(INCLUDE) $(CCFLAGS) -O2 -o $(target) $^ $(LIBS)
 
 
 run: parallel
@@ -38,4 +41,4 @@ run: parallel
 
 .PHONY: clean
 clean:
-	rm -f $(serial_obj) $(parallel_obj) serial parallel release
+	rm -f $(serial_obj) $(parallel_obj) serial parallel
