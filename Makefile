@@ -3,8 +3,7 @@ CCFLAGS  = -Wall -Wextra -Wpedantic
 OMPFLAGS = -fopenmp
 OPTFLAGS = -O2
 INCLUDE  = -I ./include
-LIBS     = -lm -lglfw -lGL
-CONFIG   =
+LIBS     = -lm -lglfw
 
 
 serial_src   = src/glad.c src/window.c src/texture.c src/shader.c src/render.c src/lbm.c src/main.c
@@ -18,17 +17,18 @@ all: $(target)
 
 
 serial: $(serial_src)
-	$(CC) $(CCFLAGS) $(OMPFLAGS) $(OPTFLAGS) -DUSE_GLES2 $(INCLUDE) -o $@ $^ $(LIBS)
+	$(CC) $(CCFLAGS) $(OMPFLAGS) $(OPTFLAGS) -DUSE_GLES2 $(INCLUDE) -o $@ $^ $(LIBS) -lEGL -lGL
 
 
 parallel: $(parallel_src)
-	$(CC) $(CCFLAGS) $(INCLUDE) $(OPTFLAGS) -o $@ $^ $(LIBS)
+	$(CC) $(CCFLAGS) $(INCLUDE) $(OPTFLAGS) -o $@ $^ $(LIBS) -lGL
 
 
 run: parallel
 	./$^ data/input.txt output.bin
 
 
+# @TODO: are we sure that phony works this way?
 .PHONY: clean
 clean:
 	rm -f $(serial_obj) $(parallel_obj) serial parallel
