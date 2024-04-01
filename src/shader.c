@@ -23,11 +23,11 @@ char *load_cstring_from_file(const char *filename) {
 
 	result = (char *) malloc(numbytes + 1);
 	if (result == NULL) {
-		fprintf(stderr, "[ERROR]: failed allocation of %lu bytes\n", numbytes);
+		fprintf(stderr, "[ERROR]: failed allocation of %zu bytes\n", numbytes);
 	}
 	else {
 		if (fread(result, sizeof(char), numbytes, fp) != numbytes) {
-			fprintf(stderr, "[ERROR]: failed read of %lu bytes\n", numbytes);
+			fprintf(stderr, "[ERROR]: failed read of %zu bytes\n", numbytes);
 		}
 
 		result[numbytes] = '\0';

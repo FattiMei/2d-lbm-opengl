@@ -481,6 +481,7 @@ void lbm_write_on_texture() {
 	for (int i = 0; i < width * height; ++i) {
 		unsigned char *base = lbm_texture_buffer + 3 * i;
 
+		// @BUG: the border of the screen is white, is consistent?
 		if (obstacles[i]) {
 			base[0] = 255;
 			base[1] = 255;
