@@ -39,6 +39,10 @@ It is particularly difficult to port the lbm functions to compute shaders. Here 
  * make
 
 
+## References
+ * [glad generator](https://gen.glad.sh)
+
+
 ## Usage
 Out of the box: `make run`
 

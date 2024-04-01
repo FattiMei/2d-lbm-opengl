@@ -1,4 +1,4 @@
-CC       = clang
+CC       = gcc
 CCFLAGS  = -Wall -Wextra -Wpedantic
 OMPFLAGS = -fopenmp
 INCLUDE  = -I ./include
