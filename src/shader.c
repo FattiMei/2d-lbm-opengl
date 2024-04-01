@@ -23,11 +23,11 @@ char *load_cstring_from_file(const char *filename) {
 
 	result = (char *) malloc(numbytes + 1);
 	if (result == NULL) {
-		fprintf(stderr, "[ERROR]: failed allocation of %ld bytes\n", numbytes);
+		fprintf(stderr, "[ERROR]: failed allocation of %u bytes\n", numbytes);
 	}
 	else {
 		if (fread(result, sizeof(char), numbytes, fp) != numbytes) {
-			fprintf(stderr, "[ERROR]: failed read of %ld bytes\n", numbytes);
+			fprintf(stderr, "[ERROR]: failed read of %u bytes\n", numbytes);
 		}
 
 		result[numbytes] = '\0';
@@ -135,6 +135,7 @@ int program_load_from_file(const char *vs_filename, const char *fs_filename) {
 }
 
 
+#ifndef USE_GLES2
 int compute_program_load(const GLchar *compute_shader_src) {
 	int compute_shader = shader_load(GL_COMPUTE_SHADER, compute_shader_src, NULL);
 	int program = glCreateProgram();
@@ -179,3 +180,4 @@ int compute_program_load_from_file(const char *filename) {
 
 	return program;
 }
+#endif
