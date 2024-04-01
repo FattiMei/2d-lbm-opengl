@@ -6,15 +6,19 @@
 
 
 static unsigned int render_program;
-static unsigned int VAO;
 
 
 // to be called after initializing lbm
 void render_init() {
-	render_program = program_load_from_file("shaders/vs_quad.glsl", "shaders/fs_texture_apply.glsl");
+	#ifndef USE_GLES2
+		static unsigned int VAO;
+		render_program = program_load_from_file("shaders/vs_quad.glsl", "shaders/fs_texture_apply.glsl");
 
-	glGenVertexArrays(1, &VAO);
-	glBindVertexArray(VAO);
+		glGenVertexArrays(1, &VAO);
+		glBindVertexArray(VAO);
+	#else
+
+	#endif
 }
 
 

@@ -1,7 +1,6 @@
 #ifdef USE_GLES2
-	#define GLAD_GLES2_IMPLEMENTATION
-	#include "gles2.h"
-	#define gladLoadGL(arg) gladLoadGLES2(arg)
+	#include <GLES2/gl2.h>
+	#define gladLoadGL(arg) {}
 #else
 	#define GLAD_GL_IMPLEMENTATION
 	#include "gl.h"

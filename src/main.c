@@ -36,6 +36,7 @@ int main(int argc, char *argv[]) {
 	}
 
 
+	// @TODO: maybe the loading of context could be moved inside the window module
 	gladLoadGL(glfwGetProcAddress);
 
 

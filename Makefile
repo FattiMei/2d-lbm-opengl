@@ -21,14 +21,13 @@ serial: $(serial_src)
 
 
 parallel: $(parallel_src)
-	$(CC) $(CCFLAGS) $(INCLUDE) $(OPTFLAGS) -o $@ $^ $(LIBS) -lGL
+	$(CC) $(CCFLAGS) $(INCLUDE) $(OPTFLAGS) -o $@ $^ $(LIBS)
 
 
 run: parallel
 	./$^ data/input.txt output.bin
 
 
-# @TODO: are we sure that phony works this way?
 .PHONY: clean
 clean:
 	rm -f $(serial_obj) $(parallel_obj) serial parallel
