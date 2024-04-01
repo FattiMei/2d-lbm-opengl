@@ -5,7 +5,7 @@
 #include "lbm.h"
 
 
-#ifdef USE_OPENGLES2
+#ifdef USE_GLES2
 static const int default_window_hints[][2] = {
 	{GLFW_RESIZABLE			, GLFW_TRUE			},
 	{GLFW_VISIBLE			, GLFW_TRUE			},
