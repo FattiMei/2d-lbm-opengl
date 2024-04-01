@@ -3,6 +3,7 @@ CCFLAGS  = -Wall -Wextra -Wpedantic
 OMPFLAGS = -fopenmp
 INCLUDE  = -I ./include
 LIBS     = -lm -lglfw -lGL
+CONFIG   =
 
 
 serial_src   = src/glad.c src/window.c src/texture.c src/shader.c src/render.c src/lbm.c src/main.c
