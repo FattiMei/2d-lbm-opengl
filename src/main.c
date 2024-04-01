@@ -52,7 +52,7 @@ int main(int argc, char *argv[]) {
 		++frames;
 
 		if (current_time - last_time >= 1.0) {
-			printf("%f ms/frame\n", (current_time - last_time) / ((double) frames));
+			printf("%f ms/frame\n", 1000.0 * (current_time - last_time) / ((double) frames));
 
 			frames = 0;
 			last_time += 1.0;
