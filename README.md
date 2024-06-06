@@ -1,18 +1,20 @@
 # 2d-lbm-opengl
 
+
+## Description
+This program simulate the flow of a liquid around a solid object using the [Lattice-Bolzmann method](https://en.wikipedia.org/wiki/Lattice_Boltzmann_methods). Particular attention was dedicated to the technology aspect (design and implementation) rather than to the algorithm itself.
+
+![plot](./img/ball.png)
+
+
+## Rationale and goals
 This project started as a fork of [2d-lbm-cuda](https://github.com/AndreaTorti-01/2d-lbm-cuda) and the initial development efforts were done [here](https://github.com/FattiMei/2d-lbm-cuda). Now it has become an independent identity with very ambitious goals.
 
-
-## Goals
  * heavily refactor the original implementation to decouple the computation from the rendering
  * design a coherent API
  * allow multiple lbm implementations (cpu based, compute shaders, opencl)
  * port the application to opengl 4.3
  * add imgui integration
-
-
-## Vision
-I want to make scientific software that is portable, interactive and uses modern GPUs for real time rendering of experiments.
 
 
 ## Interoperability
@@ -26,11 +28,10 @@ It is particularly difficult to port the lbm functions to compute shaders. Here 
  * Port the lbm computation to compute shaders
  * Experiment with different work group size to maximize performance
  * Interactivity
-   - start/stop the iterations (already implemented)
-   - reload the experiment (already implemented)
+   - start/stop the iterations
+   - reload the experiment
    - count the FPS
    - ImGui integration
- * OpenGL <-> OpenCL interop (open for pull requests)
 
 
 ## Dependencies
