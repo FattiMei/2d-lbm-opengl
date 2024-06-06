@@ -19,7 +19,7 @@ int main(int argc, char *argv[]) {
 
 
 	if (argc == 1) {
-		fprintf(stderr, "Need an input file as command-line argument\n");
+		fprintf(stderr, "Usage: %s <input_file>\n", argv[0]);
 		exit(EXIT_FAILURE);
 	}
 
