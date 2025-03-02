@@ -38,6 +38,7 @@ int main(int argc, char *argv[]) {
 
 	// @TODO: maybe the loading of context could be moved inside the window module
 	gladLoadGL(glfwGetProcAddress);
+	fprintf(stderr, "%s\n%s\n", glGetString(GL_VENDOR), glGetString(GL_RENDERER));
 
 
 	lbm_init(in);
@@ -48,14 +49,18 @@ int main(int argc, char *argv[]) {
 	double last_time = glfwGetTime();
 
 	while (!window_should_close()) {
-		double current_time = glfwGetTime();
-		++frames;
+		const double current_time = glfwGetTime();
+		const double delta_t = current_time - last_time;
 
 		if (current_time - last_time >= 1.0) {
-			printf("%f ms/frame\n", 1000.0 * (current_time - last_time) / ((double) frames));
+			printf(
+				"%f ms/frame (%.1f FPS)\n",
+				1000.0 * delta_t / ((double) frames),
+				((double) frames) / delta_t
+			);
 
 			frames = 0;
-			last_time += 1.0;
+			last_time = current_time;
 		}
 
 		if (!paused) {
@@ -67,6 +72,7 @@ int main(int argc, char *argv[]) {
 
 		window_swap_buffers();
 		window_poll_events();
+		++frames;
 	}
 
 	lbm_close();
